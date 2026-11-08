@@ -314,6 +314,30 @@ function mostrarColuna(qual) {
   for (const [id, k] of [["col-s", "s"], ["col-c", "c"], ["col-m", "m"]]) $(id).classList.toggle("ativa", k === qual);
 }
 
+/* O "voltar" do celular (gesto ou tecla) NÃO pode sair para a página de login
+   do Discord, que fica no histórico do navegador atrás do app depois do login.
+   Aqui ele vira o mesmo "←" de cima: mensagens → canais → servidores. Na lista
+   de servidores, fica (não sai). Repomos uma "trava" no histórico a cada volta,
+   então o voltar nunca alcança a página do Discord. */
+let travaArmada = false;
+function armarVoltar() {
+  if (travaArmada) return;
+  travaArmada = true;
+  try { history.pushState({ cyron: "app" }, ""); } catch (e) { /* sem History API */ }
+  window.addEventListener("popstate", aoVoltar);
+}
+function aoVoltar() {
+  /* Repõe a trava: o próximo voltar também é tratado aqui, nunca no Discord. */
+  try { history.pushState({ cyron: "app" }, ""); } catch (e) {}
+  if (!matchMedia("(max-width: 820px)").matches) return; // no PC as colunas ficam juntas
+  if ($("col-m").classList.contains("ativa") && (E.c || E.canal)) {
+    pararPoll(); E.c = ""; avisarCanalAoVivo(); mostrarColuna("c");
+  } else if ($("col-c").classList.contains("ativa")) {
+    mostrarColuna("s");
+  }
+  /* Na coluna de servidores: fica onde está (a trava já foi reposta). */
+}
+
 function desenharServidores() {
   const privado = '<div class="srv' + (E.g === "privado" ? " atual" : "") + '" data-g="privado">' +
     '<div class="ic">✉️</div><div class="nm"><b>Mensagens privadas</b><small>quem fala com a CYRON</small></div></div>' +
@@ -531,6 +555,7 @@ async function iniciar() {
     const eu = await api("/visao/eu");
     $("eu-nome").textContent = eu.bot.nome;
     if (eu.bot.avatar) $("eu-av").src = eu.bot.avatar;
+    armarVoltar();
     conectarAoVivo();
     const j = await api("/visao/servidores");
     E.servidores = j.servidores;
