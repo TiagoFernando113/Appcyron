@@ -173,8 +173,14 @@ const AO_VIVO = BOT.replace(/^http/, "ws") + "/visao/ao-vivo";
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const guardar = (k, v) => { try { v == null ? sessionStorage.removeItem(k) : sessionStorage.setItem(k, v); } catch (e) { /* modo privado */ } };
-const ler = (k) => { try { return sessionStorage.getItem(k) || ""; } catch (e) { return ""; } };
+/* localStorage, e NAO sessionStorage. No celular o login vai para o discord.com
+   e volta num contexto novo (aba/Custom Tab reaberta, ou o PWA reabrindo): o
+   sessionStorage daquela ida nao sobrevive, entao o estado do OAuth sumia e a
+   pagina mandava entrar de novo em loop. localStorage sobrevive ao pulo e ainda
+   mantem o dono logado quando reabre o app. O token aqui so' le o perfil (quem
+   e' voce); o token do bot nunca passa por aqui. */
+const guardar = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { /* modo privado */ } };
+const ler = (k) => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } };
 
 let token = ler("cyron-visao-token");
 const E = { servidores: [], g: "", canais: [], c: "", canal: null, msgs: [], timer: null, carregando: false };
@@ -507,7 +513,13 @@ async function iniciar() {
   if (q.get("error")) { history.replaceState(null, "", VOLTA); return telaEntrar(); }
   if (code) {
     const guardado = ler("cyron-estado"); guardar("cyron-estado", null);
-    if (!estado || estado !== guardado) { history.replaceState(null, "", VOLTA); return telaEntrar(); }
+    /* So' recusa se havia um estado guardado e ele NAO bate (ataque de CSRF).
+       Se nao havia nenhum -- armazenamento perdido entre contextos no celular --,
+       segue: quem conclui o login ganha um token da PROPRIA conta, e o bot so'
+       deixa ver/falar se essa conta for a dona (/visao/eu devolve 403 se nao
+       for). Era este `!estado` exigindo o estado guardado que travava o celular
+       num loop de "entrar de novo". */
+    if (guardado && estado !== guardado) { history.replaceState(null, "", VOLTA); return telaEntrar(); }
     history.replaceState(null, "", VOLTA);
     return trocarCodePorToken(code);
   }
