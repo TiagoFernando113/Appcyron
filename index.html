@@ -54,6 +54,8 @@
   .srv .nm { min-width: 0; }
   .srv .nm b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
   .srv .nm small { color: var(--fraco); }
+  .srv .ic.redondo { border-radius: 50%; }
+  .sep { height: 1px; background: #111214; margin: 8px 12px; }
 
   .cat { font-size: 12px; font-weight: 700; color: var(--fraco); text-transform: uppercase; letter-spacing: .4px; padding: 16px 16px 4px; }
   .ch { display: flex; align-items: center; gap: 8px; margin: 1px 8px; padding: 7px 10px; border-radius: 6px; color: var(--fraco); cursor: pointer; }
@@ -183,7 +185,7 @@ const guardar = (k, v) => { try { v == null ? localStorage.removeItem(k) : local
 const ler = (k) => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } };
 
 let token = ler("cyron-visao-token");
-const E = { servidores: [], g: "", canais: [], c: "", canal: null, msgs: [], timer: null, carregando: false };
+const E = { servidores: [], g: "", canais: [], c: "", canal: null, msgs: [], timer: null, carregando: false, modo: "servidor" };
 const V = { ws: null, pronto: false, espera: 2000, desistiu: false };
 
 /* ---------------- entrar e sair ---------------- */
@@ -313,11 +315,14 @@ function mostrarColuna(qual) {
 }
 
 function desenharServidores() {
-  $("lista-s").innerHTML = E.servidores.length ? E.servidores.map((s) =>
+  const privado = '<div class="srv' + (E.g === "privado" ? " atual" : "") + '" data-g="privado">' +
+    '<div class="ic">✉️</div><div class="nm"><b>Mensagens privadas</b><small>quem fala com a CYRON</small></div></div>' +
+    '<div class="sep"></div>';
+  $("lista-s").innerHTML = privado + (E.servidores.length ? E.servidores.map((s) =>
     '<div class="srv' + (s.id === E.g ? " atual" : "") + '" data-g="' + s.id + '"><div class="ic">' +
     (s.icone ? '<img loading="lazy" src="' + esc(s.icone) + '" alt="">' : esc((s.nome || "?").trim().charAt(0).toUpperCase())) +
     '</div><div class="nm"><b>' + esc(s.nome) + "</b><small>" + s.membros + " membros</small></div></div>").join("")
-    : '<div class="vazio">A CYRON ainda não está em nenhum servidor (ou acabou de ligar).</div>';
+    : '<div class="vazio">A CYRON ainda não está em nenhum servidor (ou acabou de ligar).</div>');
 }
 
 function desenharCanais() {
@@ -330,6 +335,18 @@ function desenharCanais() {
   }
   $("lista-c").innerHTML = html || '<div class="vazio">Nenhum canal de texto.</div>';
 }
+
+function desenharPrivados() {
+  $("lista-c").innerHTML = E.canais.length ? E.canais.map((c) =>
+    '<div class="srv' + (c.id === E.c ? " atual" : "") + '" data-c="' + c.id + '"><div class="ic redondo">' +
+    (c.avatar ? '<img loading="lazy" src="' + esc(c.avatar) + '" alt="">' : esc((c.nome || "?").trim().charAt(0).toUpperCase())) +
+    '</div><div class="nm"><b>' + esc(c.nome) + "</b></div></div>").join("")
+    : '<div class="vazio">Ninguém falou no privado da CYRON ainda. Quando alguém mandar DM pra ela, a conversa aparece aqui.</div>';
+}
+
+/* Redesenha a coluna do meio conforme a tela aberta: canais de um servidor, ou
+   as conversas do privado. */
+function desenharMeio() { E.modo === "privado" ? desenharPrivados() : desenharCanais(); }
 
 function desenharMensagens(manterPosicao) {
   const rolo = $("rolo-m"), antesAltura = rolo.scrollHeight, antesTopo = rolo.scrollTop;
@@ -344,6 +361,8 @@ function desenharMensagens(manterPosicao) {
 function erroNa(lugar, e) { if (e.message !== "login" && e.message !== "dono") $(lugar).innerHTML = '<div class="erro">' + esc(e.message) + "</div>"; }
 
 async function abrirServidor(g, semRolar) {
+  if (g === "privado") return abrirPrivado(semRolar);
+  E.modo = "servidor";
   E.g = g; E.c = ""; E.canais = []; pararPoll(); avisarCanalAoVivo();
   desenharServidores();
   const s = E.servidores.find((x) => x.id === g);
@@ -354,15 +373,34 @@ async function abrirServidor(g, semRolar) {
   catch (e) { erroNa("lista-c", e); }
 }
 
+/* As conversas no privado (DM) do bot. Cada conversa vira um "canal" que o
+   resto da tela ja' sabe abrir -- so' que com foto de gente e sempre liberado
+   para ler e responder (a CYRON manda na propria DM). */
+async function abrirPrivado(semRolar) {
+  E.modo = "privado"; E.g = "privado"; E.c = ""; E.canais = []; pararPoll(); avisarCanalAoVivo();
+  desenharServidores();
+  $("nome-s").textContent = "Mensagens privadas";
+  $("lista-c").innerHTML = '<div class="vazio">Carregando…</div>';
+  if (!semRolar) mostrarColuna("c");
+  try {
+    const j = await api("/visao/privado");
+    E.canais = (j.conversas || []).map((p) => ({ id: p.id, nome: p.nome, avatar: p.avatar, usuario: p.usuario, tipo: "privado", ler: true, escrever: true }));
+    desenharPrivados();
+  } catch (e) { erroNa("lista-c", e); }
+}
+
 async function abrirCanal(c) {
   E.c = c; E.canal = E.canais.find((x) => x.id === c) || null; E.msgs = []; pararPoll();
-  desenharCanais();
-  $("nome-c").textContent = E.canal ? (E.canal.tipo === "avisos" ? "📢 " : "# ") + E.canal.nome : "";
+  desenharMeio();
+  const dm = !!(E.canal && E.canal.tipo === "privado");
+  $("nome-c").textContent = E.canal ? (dm ? "@ " : E.canal.tipo === "avisos" ? "📢 " : "# ") + E.canal.nome : "";
   $("msgs").innerHTML = '<div class="vazio">Carregando…</div>';
   $("escrever").hidden = false;
   const pode = !E.canal || E.canal.escrever;
   $("texto").disabled = !pode; $("bt-enviar").disabled = !pode;
-  $("texto").placeholder = pode ? "Conversar em #" + (E.canal ? E.canal.nome : "") + " como CYRON" : "A CYRON não pode falar neste canal";
+  $("texto").placeholder = !pode ? "A CYRON não pode falar neste canal"
+    : dm ? "Responder " + E.canal.nome + " como CYRON"
+    : "Conversar em #" + (E.canal ? E.canal.nome : "") + " como CYRON";
   $("nota").textContent = "";
   mostrarColuna("m");
   try {
