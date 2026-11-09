@@ -60,14 +60,23 @@
   /* Painel do dono */
   .painel { padding: 16px; max-width: 1120px; margin: 0 auto; }
   /* Faixa de destaque: o número que importa, grande, com mini-gráfico. */
-  .hero { background: linear-gradient(135deg, #2b2d31, #26282c); border: 1px solid var(--linha);
+  .hero { background: linear-gradient(135deg, #2b2d31, #26282c); border: 1px solid var(--linha); margin-top: 14px;
     border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .hero-e { flex: 1 1 160px; min-width: 140px; }
   .hero-r { font-size: 12px; color: var(--fraco); font-weight: 600; }
   .hero-v { font-size: 44px; font-weight: 800; color: var(--forte); line-height: 1; margin: 4px 0; letter-spacing: -1px; }
   .hero-s { font-size: 12px; color: var(--fraco); }
   .hero-g { flex: 1 1 180px; min-width: 150px; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
+  /* Seis cartões: 2×3 no celular, 3×2 no resto — nunca um sozinho na linha. */
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+  @media (min-width: 700px) { .tiles { grid-template-columns: repeat(3, 1fr); } }
+  /* No PC os blocos vão em duas colunas, como painel de verdade. */
+  .grade { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+  .grade > .bloco { margin-top: 0; min-width: 0; }
+  @media (min-width: 1100px) { .grade { grid-template-columns: 1fr 1fr; } .grade .duas { grid-template-columns: 1fr; } }
+  /* No painel a coluna de canais não tem o que mostrar: some no PC. */
+  @media (min-width: 821px) { #app.so-painel { grid-template-columns: 250px 1fr; } #app.so-painel #col-c { display: none; } }
+  .atualizado { font-size: 11px; color: var(--fraco); text-align: right; margin-top: 6px; }
   .tile { background: var(--painel); border: 1px solid var(--linha); border-left: 3px solid var(--ac, var(--azul));
     border-radius: 10px; padding: 11px 13px; }
   .tile .ti { font-size: 11px; color: var(--fraco); display: flex; align-items: center; gap: 5px; }
@@ -77,11 +86,14 @@
   .bloco-t { font-size: 13px; font-weight: 700; color: var(--forte); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
   /* Gráfico de área (SVG) — é o que faz parecer painel de verdade. É mexível:
      touch-action none pra arrastar o dedo sem rolar a página. */
-  .area { width: 100%; height: auto; display: block; overflow: visible; touch-action: none; cursor: crosshair; }
-  .area.mini { max-height: 60px; }
+  /* pan-y: o dedo que desce rola a página; o que anda pro lado lê o gráfico.
+     Com "none" o gráfico prendia a rolagem de quem só queria descer. */
+  .area { width: 100%; height: auto; display: block; overflow: visible; touch-action: pan-y; cursor: crosshair; }
+  .eixo { display: flex; justify-content: space-between; font-size: 11px; color: var(--fraco); margin-top: 2px; }
   .leitura { font-size: 14px; color: var(--fraco); min-height: 24px; margin-bottom: 4px; }
   .leitura b { font-size: 22px; font-weight: 800; color: var(--forte); }
-  @media (max-width: 520px) { .hero { flex-direction: column; align-items: stretch; } }
+  /* Em coluna, o flex-basis vira ALTURA: 160px + 180px de vazio no celular. */
+  @media (max-width: 520px) { .hero { flex-direction: column; align-items: stretch; } .hero-e, .hero-g { flex: none; } }
   .d-n { fill: var(--forte); font-size: 26px; font-weight: 800; }
   .d-l { fill: var(--fraco); font-size: 11px; }
   .donut-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
@@ -90,10 +102,6 @@
   .legenda li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; color: var(--texto); }
   .legenda b { margin-left: auto; color: var(--forte); font-variant-numeric: tabular-nums; }
   .lp { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
-  .grafico { display: flex; align-items: flex-end; gap: 3px; height: 92px; }
-  .barra { flex: 1; display: flex; align-items: flex-end; height: 100%; }
-  .barra .b { width: 100%; background: var(--azul); border-radius: 3px 3px 0 0; min-height: 2px; }
-  .barra .b.hoje { background: var(--verde); }
   .tab { width: 100%; border-collapse: collapse; font-size: 14px; }
   .tab th { text-align: left; color: var(--fraco); font-weight: 600; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--linha); }
   .tab td { padding: 7px 8px; border-bottom: 1px solid #2b2d31; }
@@ -113,17 +121,14 @@
   .mini-l { list-style: none; margin: 0; padding: 0; }
   .mini-l li { padding: 4px 0; border-bottom: 1px solid #2b2d31; font-size: 14px; }
   .dim { color: var(--fraco); font-size: 12px; }
-  .leg { color: var(--fraco); font-size: 12px; margin-top: 8px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { background: #1e1f22; border: 1px solid var(--linha); border-radius: 20px; padding: 3px 10px; font-size: 13px; }
-  .chip b { color: var(--forte); }
-  .grafico.baixo { height: 56px; }
-  .barras-h { display: flex; flex-direction: column; gap: 6px; }
-  .bh { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
-  .bh-n { color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bh-b { height: 10px; background: #1e1f22; border-radius: 6px; overflow: hidden; }
-  .bh-b > span { display: block; height: 100%; background: var(--azul); border-radius: 6px; }
-  .bh-v { color: var(--forte); font-variant-numeric: tabular-nums; }
+  /* Ranking: o nome inteiro em cima, número à direita, barra embaixo. Na
+     versão de antes o nome tinha 90px e virava "Bandeira ...", "Salas por...". */
+  .barras-h { display: flex; flex-direction: column; gap: 9px; }
+  .bh { display: grid; grid-template-columns: 1fr auto; align-items: baseline; column-gap: 8px; row-gap: 4px; font-size: 13px; }
+  .bh-n { color: var(--texto); min-width: 0; overflow-wrap: anywhere; }
+  .bh-b { grid-column: 1 / -1; height: 8px; background: #1e1f22; border-radius: 6px; overflow: hidden; }
+  .bh-b > span { display: block; height: 100%; background: var(--cor-barra, var(--azul)); border-radius: 6px; }
+  .bh-v { color: var(--forte); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .erro-i { padding: 8px 0; border-bottom: 1px solid #2b2d31; }
   .erro-h { font-weight: 600; color: var(--vermelho); font-size: 13px; }
   .erro-p { color: var(--texto); font-size: 13px; white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
@@ -460,7 +465,9 @@ function desenharMensagens(manterPosicao) {
 function erroNa(lugar, e) { if (e.message !== "login" && e.message !== "dono") $(lugar).innerHTML = '<div class="erro">' + esc(e.message) + "</div>"; }
 
 async function abrirServidor(g, semRolar) {
-  if (g === "painel") return abrirPainel(semRolar);
+  /* A coluna de canais some só no painel (no PC); em servidor e privado ela volta. */
+  $("app").classList.toggle("so-painel", g === "painel");
+  if (g === "painel") return abrirPainel();
   if (g === "privado") return abrirPrivado(semRolar);
   E.modo = "servidor";
   E.g = g; E.c = ""; E.canais = []; pararPoll(); avisarCanalAoVivo();
@@ -495,90 +502,159 @@ const emK = (n) => { n = Number(n) || 0; return n >= 1000 ? (n / 1000).toFixed(n
 const milhar = (n) => (Number(n) || 0).toLocaleString("pt-BR");
 const reais = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
 const dataCurta = (ms) => { const d = new Date(ms); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); };
+/* O bot manda o dia como "2026-11-09" (UTC). Na tela: "seg 09/11". Lido em
+   UTC de propósito — new Date("2026-11-09") em Brasília cairia no dia 8. */
+const SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+function diaCurto(iso, comSemana) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ""));
+  if (!m) return String(iso || "");
+  const dm = m[3] + "/" + m[2];
+  return comSemana ? SEMANA[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()] + " " + dm : dm;
+}
+/* As línguas como quem as fala escreve — "zh" e "tl" não dizem nada a ninguém. */
+const IDIOMA_NOME = {
+  pt: "🇧🇷 Português", en: "🇬🇧 English", es: "🇪🇸 Español", ko: "🇰🇷 한국어", ja: "🇯🇵 日本語",
+  "zh-CN": "🇨🇳 中文", zh: "🇨🇳 中文", de: "🇩🇪 Deutsch", fr: "🇫🇷 Français", it: "🇮🇹 Italiano",
+  ru: "🇷🇺 Русский", ar: "🇸🇦 العربية", tr: "🇹🇷 Türkçe", id: "🇮🇩 Bahasa Indonesia", th: "🇹🇭 ไทย",
+  vi: "🇻🇳 Tiếng Việt", pl: "🇵🇱 Polski", nl: "🇳🇱 Nederlands", tl: "🇵🇭 Filipino", hi: "🇮🇳 हिन्दी",
+  uk: "🇺🇦 Українська", "zh-TW": "🏮 繁體中文", ms: "🇲🇾 Bahasa Melayu",
+};
 /* Seta de tendência: verde pra cima, vermelho pra baixo. É o que faz um número
    dizer alguma coisa — "4.8k" sozinho não diz se é bom. */
 function tendencia(agora, antes) {
+  agora = Number(agora) || 0; antes = Number(antes) || 0;
   if (!antes) return agora ? '<span class="t-nov">novo</span>' : "";
   const p = Math.round(((agora - antes) / antes) * 100);
   if (!p) return '<span class="t-igual">= igual</span>';
   return '<span class="t-' + (p > 0 ? "up" : "dn") + '">' + (p > 0 ? "▲" : "▼") + " " + Math.abs(p) + "%</span>";
 }
+/* "Subiu QUANTO": a diferença em número, que é o que se lê de um dia pro
+   outro. Porcentagem contra um dia só mente — de 40 para 1.180 dá "▲ 2850%",
+   que não diz nada que o "+1.140" não diga melhor. */
+function diferenca(agora, antes) {
+  const d = (Number(agora) || 0) - (Number(antes) || 0);
+  if (!d) return '<span class="t-igual">= igual</span>';
+  return '<span class="t-' + (d > 0 ? "up" : "dn") + '">' + (d > 0 ? "▲ +" : "▼ −") + milhar(Math.abs(d)) + "</span>";
+}
 
 /* O painel do dono: os mesmos números do /admin, mas em tela web — com gráfico
-   de verdade e tabela com busca. Abre na coluna principal (a larga). */
-async function abrirPainel(semRolar) {
+   de verdade e tabela com busca. Abre na coluna principal (a larga).
+
+   Recarregar não apaga a tela: os números de antes ficam até os novos
+   chegarem, e a rolagem fica onde estava. Antes, ⟳ piscava "Carregando…" e
+   jogava a pessoa de volta pro topo. */
+async function abrirPainel(recarregando) {
   E.modo = "painel"; E.g = "painel"; E.c = ""; E.canal = null; pararPoll(); avisarCanalAoVivo();
+  $("app").classList.add("so-painel");
   desenharServidores();
   $("nome-s").textContent = "Painel do dono";
   $("nome-c").textContent = "📊 Painel do dono";
   $("aovivo").hidden = true;
   $("escrever").hidden = true;
-  $("msgs").innerHTML = '<div class="vazio">Carregando…</div>';
+  if (!(recarregando && E.painel)) $("msgs").innerHTML = '<div class="vazio">Carregando…</div>';
   mostrarColuna("m");
+  const rolo = $("rolo-m"), topo = rolo.scrollTop;
   try {
     E.painel = await api("/visao/admin/numeros");
+    E.painelEm = Date.now();
     E.painelFiltro = E.painelFiltro || ""; E.painelOrdem = E.painelOrdem || "traducoes";
     desenharPainel();
+    rolo.scrollTop = recarregando ? topo : 0;
   } catch (e) { erroNa("msgs", e); }
 }
 
-/* Gráfico de área em SVG. Curva suave (Catmull-Rom→Bézier), preenchimento com
-   degradê, ponto no último dia. Mexível: veja ligarGrafico. */
+/* Gráfico de área em SVG, com preenchimento em degradê. Mexível: veja
+   ligarGrafico. */
 const GW = 600, GH = 150, GP = 10;
-function svgLinha(id, serie, cor, mini) {
-  const mx = Math.max(1, ...serie), mn = Math.min(0, ...serie), n = serie.length;
-  const X = (i) => n <= 1 ? GW / 2 : GP + (i * (GW - 2 * GP)) / (n - 1);
-  const Y = (v) => GH - GP - ((v - mn) / ((mx - mn) || 1)) * (GH - 2 * GP);
-  const p = serie.map((v, i) => [X(i), Y(v)]);
-  let linha = "M" + p[0][0] + " " + p[0][1];
-  for (let i = 0; i < p.length - 1; i++) {
-    const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], e = p[i + 2] || c;
-    linha += " C" + (b[0] + (c[0] - a[0]) / 6) + " " + (b[1] + (c[1] - a[1]) / 6) + " " +
-      (c[0] - (e[0] - b[0]) / 6) + " " + (c[1] - (e[1] - b[1]) / 6) + " " + c[0] + " " + c[1];
+const gx = (i, n) => (n <= 1 ? GW / 2 : GP + (i * (GW - 2 * GP)) / (n - 1));
+const gy = (v, mn, mx) => GH - GP - ((v - mn) / ((mx - mn) || 1)) * (GH - 2 * GP);
+const r1 = (x) => Math.round(x * 10) / 10;
+
+/* A curva passa por todos os pontos e NUNCA vai além deles (Fritsch–Carlson,
+   a mesma ideia do curveMonotoneX do d3). A curva de antes (Catmull-Rom)
+   "balançava": entre um dia zerado e um pico ela descia ABAIXO do zero e
+   furava o chão do gráfico — inventando um número negativo que não existe. */
+function caminhoMonotono(p) {
+  const n = p.length;
+  if (n === 1) return "M" + r1(p[0][0]) + " " + r1(p[0][1]);
+  const dx = [], m = [];
+  for (let i = 0; i < n - 1; i++) { dx[i] = p[i + 1][0] - p[i][0]; m[i] = (p[i + 1][1] - p[i][1]) / dx[i]; }
+  const t = new Array(n);
+  t[0] = m[0]; t[n - 1] = m[n - 2];
+  for (let i = 1; i < n - 1; i++) t[i] = m[i - 1] * m[i] <= 0 ? 0 : (m[i - 1] + m[i]) / 2;
+  for (let i = 0; i < n - 1; i++) {
+    if (m[i] === 0) { t[i] = 0; t[i + 1] = 0; continue; }
+    const a = t[i] / m[i], b = t[i + 1] / m[i], h = a * a + b * b;
+    if (h > 9) { const s = 3 / Math.sqrt(h); t[i] = s * a * m[i]; t[i + 1] = s * b * m[i]; }
   }
-  const area = linha + " L" + p[n - 1][0] + " " + (GH - GP) + " L" + p[0][0] + " " + (GH - GP) + " Z";
-  return '<svg id="' + id + '" class="area' + (mini ? " mini" : "") + '" viewBox="0 0 ' + GW + " " + GH + '">' +
+  let d = "M" + r1(p[0][0]) + " " + r1(p[0][1]);
+  for (let i = 0; i < n - 1; i++) {
+    const h = dx[i] / 3;
+    d += " C" + r1(p[i][0] + h) + " " + r1(p[i][1] + t[i] * h) + " " + r1(p[i + 1][0] - h) + " " +
+      r1(p[i + 1][1] - t[i + 1] * h) + " " + r1(p[i + 1][0]) + " " + r1(p[i + 1][1]);
+  }
+  return d;
+}
+
+function svgLinha(id, serie, cor) {
+  if (!Array.isArray(serie) || !serie.length) return '<div class="dim">sem dados ainda</div>';
+  const mx = Math.max(1, ...serie), mn = Math.min(0, ...serie), n = serie.length;
+  const p = serie.map((v, i) => [gx(i, n), gy(v, mn, mx)]);
+  const linha = caminhoMonotono(p);
+  const area = linha + " L" + r1(p[n - 1][0]) + " " + (GH - GP) + " L" + r1(p[0][0]) + " " + (GH - GP) + " Z";
+  return '<svg id="' + id + '" class="area" viewBox="0 0 ' + GW + " " + GH + '" role="img">' +
     '<defs><linearGradient id="' + id + '-g" x1="0" x2="0" y1="0" y2="1">' +
     '<stop offset="0" stop-color="' + cor + '" stop-opacity=".30"/>' +
     '<stop offset="1" stop-color="' + cor + '" stop-opacity="0"/></linearGradient></defs>' +
+    '<line x1="' + GP + '" y1="' + (GH - GP) + '" x2="' + (GW - GP) + '" y2="' + (GH - GP) + '" stroke="#3f4147" stroke-width="1" vector-effect="non-scaling-stroke"/>' +
     '<path d="' + area + '" fill="url(#' + id + '-g)"/>' +
     '<path d="' + linha + '" fill="none" stroke="' + cor + '" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>' +
     '<line class="guia" x1="0" y1="' + GP + '" x2="0" y2="' + (GH - GP) + '" stroke="' + cor + '" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0"/>' +
     '<circle class="ponto" r="5" fill="' + cor + '" stroke="#1e1f22" stroke-width="2.5" opacity="0"/></svg>';
 }
-/* Deixa o gráfico mexível: tocar/arrastar move a guia e escreve o valor exato
-   do dia na "leitura" acima. Começa mostrando hoje. */
+
+/* A régua embaixo do gráfico: de quando, até quando, e o pico — sem ela a
+   curva mostrava o desenho, mas não a escala. */
+function eixo(serie, rotulos) {
+  if (!Array.isArray(serie) || !serie.length) return "";
+  const mx = Math.max(...serie), i = serie.indexOf(mx);
+  return '<div class="eixo"><span>' + esc(diaCurto(rotulos[0])) + "</span>" +
+    "<span>pico " + milhar(mx) + (rotulos[i] ? " · " + esc(diaCurto(rotulos[i])) : "") + "</span><span>hoje</span></div>";
+}
+
+/* Deixa o gráfico mexível: tocar, arrastar pro lado ou passar o mouse move a
+   guia e escreve o valor exato do dia, e quanto mudou do dia anterior. Começa
+   mostrando hoje. */
 function ligarGrafico(id, serie, rotulos, unidade) {
-  const svg = document.getElementById(id); if (!svg) return;
+  const svg = document.getElementById(id); if (!svg || !serie || !serie.length) return;
   const guia = svg.querySelector(".guia"), ponto = svg.querySelector(".ponto");
   const leitura = document.getElementById(id + "-r");
   const n = serie.length, mx = Math.max(1, ...serie), mn = Math.min(0, ...serie);
-  const X = (i) => n <= 1 ? GW / 2 : GP + (i * (GW - 2 * GP)) / (n - 1);
-  const Y = (v) => GH - GP - ((v - mn) / ((mx - mn) || 1)) * (GH - 2 * GP);
   const mostrar = (i) => {
     i = Math.max(0, Math.min(n - 1, i));
-    const v = serie[i], ant = i > 0 ? serie[i - 1] : null;
-    guia.setAttribute("x1", X(i)); guia.setAttribute("x2", X(i)); guia.setAttribute("opacity", ".55");
-    ponto.setAttribute("cx", X(i)); ponto.setAttribute("cy", Y(v)); ponto.setAttribute("opacity", "1");
+    const v = serie[i];
+    guia.setAttribute("x1", gx(i, n)); guia.setAttribute("x2", gx(i, n)); guia.setAttribute("opacity", ".55");
+    ponto.setAttribute("cx", gx(i, n)); ponto.setAttribute("cy", gy(v, mn, mx)); ponto.setAttribute("opacity", "1");
     if (leitura) {
-      const d = ant == null ? "" : ' <span class="' + (v >= ant ? "t-up" : "t-dn") + '">' + (v >= ant ? "▲" : "▼") + " " +
-        (ant ? Math.abs(Math.round(((v - ant) / ant) * 100)) : 0) + "%</span>";
-      leitura.innerHTML = "<b>" + milhar(v) + "</b> " + (unidade || "") +
-        ' <span class="dim">· ' + esc(rotulos[i] || "") + "</span>" + d;
+      /* unidade = [singular, plural]: "1 servidor novo", não "1 servidores novos". */
+      const u = Array.isArray(unidade) ? unidade[v === 1 ? 0 : 1] : unidade || "";
+      leitura.innerHTML = "<b>" + milhar(v) + "</b> " + esc(u) +
+        ' <span class="dim">· ' + (i === n - 1 ? "hoje" : esc(diaCurto(rotulos[i], true))) + "</span>" +
+        (i > 0 ? " " + diferenca(v, serie[i - 1]) + ' <span class="dim">vs dia anterior</span>' : "");
     }
   };
+  /* O dedo cai na régua do SVG, que tem margem: converte pra coordenada do
+     desenho antes de achar o dia, senão as pontas erravam o dia. */
   const pos = (ev) => {
     const r = svg.getBoundingClientRect();
-    const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
-    mostrar(Math.round(Math.max(0, Math.min(1, cx / r.width)) * (n - 1)));
+    const x = ((ev.clientX - r.left) / r.width) * GW;
+    mostrar(Math.round(((x - GP) / (GW - 2 * GP)) * (n - 1)));
   };
   svg.addEventListener("pointerdown", pos);
-  svg.addEventListener("pointermove", (e) => { if (e.buttons || e.pointerType !== "mouse") pos(e); });
-  svg.addEventListener("mousemove", pos);
-  svg.addEventListener("touchstart", pos, { passive: true });
-  svg.addEventListener("touchmove", (e) => { pos(e); e.preventDefault(); }, { passive: false });
+  svg.addEventListener("pointermove", pos);
   mostrar(n - 1);
 }
+
 /* Rosca (donut) em SVG pela técnica de dasharray acumulado. Mostra o total no
    meio e a legenda com os números exatos ao lado. */
 function svgDonut(partes) {
@@ -588,28 +664,40 @@ function svgDonut(partes) {
   const anel = tot ? vis.map((p) => {
     const len = (p.valor / tot) * C;
     const seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + rho + '" fill="none" stroke="' + p.cor +
-      '" stroke-width="' + sw + '" stroke-dasharray="' + len + " " + (C - len) + '" stroke-dashoffset="' + (-acc) +
+      '" stroke-width="' + sw + '" stroke-dasharray="' + r1(len) + " " + r1(C - len) + '" stroke-dashoffset="' + r1(-acc) +
       '" transform="rotate(-90 ' + cx + " " + cy + ')"/>';
     acc += len; return seg;
   }).join("") : '<circle cx="' + cx + '" cy="' + cy + '" r="' + rho + '" fill="none" stroke="#3f4147" stroke-width="' + sw + '"/>';
-  const svg = '<svg class="donut" viewBox="0 0 140 140" width="132" height="132">' + anel +
-    '<text x="70" y="66" text-anchor="middle" class="d-n">' + tot + "</text>" +
+  const svg = '<svg class="donut" viewBox="0 0 140 140" width="132" height="132" role="img">' + anel +
+    '<text x="70" y="66" text-anchor="middle" class="d-n">' + milhar(tot) + "</text>" +
     '<text x="70" y="84" text-anchor="middle" class="d-l">servidores</text></svg>';
   const leg = '<ul class="legenda">' + partes.map((p) => '<li><span class="lp" style="background:' + p.cor + '"></span>' +
-    esc(p.rotulo) + " <b>" + p.valor + "</b></li>").join("") + "</ul>";
+    esc(p.rotulo) + " <b>" + milhar(p.valor) +
+    (tot ? ' <span class="dim">' + Math.round((p.valor / tot) * 100) + "%</span>" : "") + "</b></li>").join("") + "</ul>";
   return '<div class="donut-wrap">' + svg + leg + "</div>";
+}
+
+/* Ranking em barras: nome inteiro em cima, número à direita, barra embaixo. */
+function barrasH(itens, rotulo, valor, sub, cor) {
+  const mx = Math.max(1, ...itens.map(valor));
+  return '<div class="barras-h"' + (cor ? ' style="--cor-barra:' + cor + '"' : "") + ">" + itens.map((x) =>
+    '<div class="bh"><span class="bh-n">' + esc(rotulo(x)) + "</span>" +
+    '<span class="bh-v">' + milhar(valor(x)) + (sub && sub(x) ? ' <span class="dim">· ' + sub(x) + "</span>" : "") + "</span>" +
+    '<span class="bh-b"><span style="width:' + Math.max(2, Math.round((valor(x) / mx) * 100)) + '%"></span></span></div>').join("") + "</div>";
 }
 
 function desenharPainel() {
   const n = E.painel; if (!n) return;
-  const d = n.dinheiro, s = n.servidores, h = n.hoje, cr = n.crescimento || {};
+  const d = n.dinheiro || {}, s = n.servidores || {}, h = n.hoje || {}, cr = n.crescimento || {};
+  const dias = n.dias14 || [];
+  const vencendo = d.vencendo || [];
   const listinha = (itens, fmt) => itens && itens.length
     ? '<ul class="mini-l">' + itens.map(fmt).join("") + "</ul>" : '<div class="dim">ninguém</div>';
 
   /* O que PEDE AÇÃO primeiro -- é o que o Discord fazia e faltava aqui. */
   const alertas = (n.atencao && n.atencao.length)
     ? '<div class="alertas"><div class="al-t">🔔 Pede atenção</div>' +
-        n.atencao.map((a) => '<div class="al-i">' + a.icone + " " + esc(a.texto) + "</div>").join("") + "</div>"
+        n.atencao.map((a) => '<div class="al-i">' + esc(a.icone || "") + " " + esc(a.texto) + "</div>").join("") + "</div>"
     : '<div class="alertas ok">✅ Tudo em ordem — nada pedindo atenção.</div>';
 
   /* Faixa de destaque: traduções dos 14 dias num gráfico MEXÍVEL. Arrasta o dedo
@@ -617,19 +705,26 @@ function desenharPainel() {
   const hero = '<div class="hero">' +
     '<div class="hero-e"><div class="hero-r">🌐 Traduções hoje</div>' +
       '<div class="hero-v">' + milhar(h.traducoes) + "</div>" +
-      '<div class="hero-s">ontem ' + milhar(h.ontem || 0) + " · " + tendencia(h.traducoes, h.ontem) + "</div></div>" +
+      '<div class="hero-s">ontem ' + milhar(h.ontem) + " · " + diferenca(h.traducoes, h.ontem) +
+        (h.cache ? " · " + milhar(h.cache) + " do cache" : "") + "</div></div>" +
     '<div class="hero-g"><div class="leitura" id="g-trad-r"></div>' + svgLinha("g-trad", n.serie14, "#5865f2") +
-      '<div class="dim" style="margin-top:4px">👆 arraste pra ver cada dia</div></div></div>';
+      eixo(n.serie14, dias) + "</div></div>";
 
+  /* Quem vence em 7 dias, separado: o cartão "Em teste" contava também quem
+     PAGA, e o número embaixo dele não era de teste nenhum. */
+  const vencemTeste = vencendo.filter((x) => x.teste).length;
+  const vencemPagos = vencendo.length - vencemTeste;
   const tile = (ic, t, v, sub, extra, cor) => '<div class="tile" style="--ac:' + (cor || "var(--azul)") + '"><div class="ti">' + ic + " " + esc(t) + '</div><div class="tv">' + v +
     (extra ? ' <span class="tr-i">' + extra + "</span>" : "") + '</div>' + (sub ? '<div class="ts">' + sub + "</div>" : "") + "</div>";
   const tiles =
-    tile("🖥️", "Servidores", s.ativos, "+" + s.novos7 + " novos · −" + s.sairam7 + " em 7 dias", "", "#5865f2") +
-    tile("💰", "Pagando", d.pagando, reais(d.receita) + "/mês" + (d.liberado ? " · +" + d.liberado + " liberados" : ""), "", "#23a55a") +
-    tile("🧪", "Em teste", d.teste, d.vencendo7 + " vencem em 7 dias", "", "#f0b232") +
-    tile("🎟️", "Códigos livres", d.codigosLivres, n.beta.ligado ? "🧪 beta ligado" : "", "", "#00a8fc") +
-    tile("📈", "Nesta semana", emK(cr.semana || 0), "antes " + emK(cr.semanaAntes || 0), tendencia(cr.semana, cr.semanaAntes), "#eb459e") +
-    tile("🐛", "Erros", n.erros, n.erros ? "veja embaixo" : "tudo limpo", "", n.erros ? "#f23f43" : "#949ba4");
+    tile("🖥️", "Servidores", milhar(s.ativos), "+" + milhar(s.novos7) + " novos · −" + milhar(s.sairam7) + " saíram (7 dias)", "", "#5865f2") +
+    tile("💰", "Pagando", milhar(d.pagando), reais(d.receita) + "/mês" +
+      (vencemPagos ? " · " + vencemPagos + " vence" + (vencemPagos > 1 ? "m" : "") + " em 7 dias" : ""), "", "#23a55a") +
+    tile("🧪", "Em teste", milhar(d.teste),
+      vencemTeste ? vencemTeste + " acaba" + (vencemTeste > 1 ? "m" : "") + " em 7 dias" : "nenhum acabando", "", "#f0b232") +
+    tile("🎟️", "Códigos livres", milhar(d.codigosLivres), n.beta?.ligado ? "🧪 beta ligado" : "", "", "#00a8fc") +
+    tile("📈", "Traduções · 7 dias", milhar(cr.semana), "7 dias antes: " + milhar(cr.semanaAntes), tendencia(cr.semana, cr.semanaAntes), "#eb459e") +
+    tile("🐛", "Erros", milhar(n.erros), n.erros ? "veja embaixo" : "tudo limpo", "", n.erros ? "#f23f43" : "#949ba4");
 
   /* Rosca da carteira: quem paga, quem testa, quem foi liberado, quem é grátis. */
   const carteira = '<div class="bloco"><div class="bloco-t">🧩 Carteira de servidores</div>' +
@@ -642,33 +737,27 @@ function desenharPainel() {
 
   const dinheiro = '<div class="bloco"><div class="bloco-t">💰 Dinheiro</div><div class="duas">' +
     '<div><div class="sub-t">⏰ Vencem em 7 dias</div>' +
-      listinha(d.vencendo, (x) => "<li>" + esc(x.nome) + ' <span class="dim">' + dataCurta(x.ate) + (x.teste ? " · teste" : "") + "</span></li>") + "</div>" +
+      listinha(vencendo, (x) => "<li>" + esc(x.nome) + ' <span class="dim">' + dataCurta(x.ate) + (x.teste ? " · teste" : "") + "</span></li>") + "</div>" +
     '<div><div class="sub-t">💸 Não renovaram (30d)</div>' +
       listinha(d.naoRenovaram, (x) => "<li>" + esc(x.nome) + ' <span class="dim">venceu ' + dataCurta(x.venceu) + "</span></li>") + "</div>" +
     "</div></div>";
 
-  /* Barras horizontais pra idiomas e funções: ranking é mais legível assim. */
-  const barrasH = (itens, rotulo, valor, sub) => {
-    const mx = Math.max(1, ...itens.map(valor));
-    return '<div class="barras-h">' + itens.map((x) => '<div class="bh"><span class="bh-n" title="' + esc(rotulo(x)) + '">' + esc(rotulo(x)) +
-      '</span><span class="bh-b"><span style="width:' + Math.round((valor(x) / mx) * 100) + '%"></span></span>' +
-      '<span class="bh-v">' + valor(x) + (sub && sub(x) ? ' <span class="dim">· ' + sub(x) + "</span>" : "") + "</span></div>").join("") + "</div>";
-  };
   const idiomas = (cr.idiomas && cr.idiomas.length)
-    ? barrasH(cr.idiomas, (x) => x.idioma, (x) => x.n) : '<span class="dim">ninguém ainda</span>';
-  const temEntradas = cr.entradas14 && cr.entradas14.length;
+    ? barrasH(cr.idiomas, (x) => IDIOMA_NOME[x.idioma] || x.idioma, (x) => x.n, null, "#00a8fc")
+    : '<span class="dim">ninguém ainda</span>';
+  const temEntradas = Array.isArray(cr.entradas14) && cr.entradas14.length;
   const crescimento = '<div class="bloco"><div class="bloco-t">🌱 Servidores novos · 14 dias</div>' +
     (temEntradas
-      ? '<div class="leitura" id="g-novos-r"></div>' + svgLinha("g-novos", cr.entradas14, "#23a55a") +
-        '<div class="dim" style="margin-top:4px">👆 arraste pra ver cada dia · +' + (s.novos7 || 0) + " nesta semana</div>"
+      ? '<div class="leitura" id="g-novos-r"></div>' + svgLinha("g-novos", cr.entradas14, "#23a55a") + eixo(cr.entradas14, dias)
       : '<div class="dim">sem dados ainda</div>') +
-    '<div class="duas" style="margin-top:14px">' +
-      '<div><div class="sub-t">🆕 Chegaram esta semana</div>' + listinha(cr.novos, (x) => "<li>" + esc(x) + "</li>") + "</div>" +
-      '<div><div class="sub-t">🌐 Idiomas dos membros</div>' + idiomas + "</div>" +
-    "</div></div>";
+    '<div class="sub-t" style="margin-top:14px">🆕 Chegaram nos últimos 7 dias</div>' + listinha(cr.novos, (x) => "<li>" + esc(x) + "</li>") +
+    "</div>";
+
+  const linguas = '<div class="bloco"><div class="bloco-t">🌐 Idiomas escolhidos</div>' + idiomas + "</div>";
 
   const funcoes = '<div class="bloco"><div class="bloco-t">📊 Funções mais usadas · mês</div>' +
-    ((n.funcoes && n.funcoes.length) ? barrasH(n.funcoes, (x) => x.nome, (x) => x.n, (x) => x.servidores || 0)
+    ((n.funcoes && n.funcoes.length)
+      ? barrasH(n.funcoes, (x) => x.nome, (x) => x.n, (x) => (x.servidores ? x.servidores + " serv." : ""))
       : '<div class="dim">nada contado este mês ainda</div>') + "</div>";
 
   const horaErro = (ms) => { if (!ms) return ""; const dt = new Date(ms);
@@ -679,29 +768,36 @@ function desenharPainel() {
           '<div class="erro-p">' + esc(e.porque || "") + "</div></div>").join("")
       : '<div class="dim">✅ nenhum erro desde que o bot subiu</div>') + "</div>";
 
-  const selo = { pago: "🟢", liberado: "🔵", teste: "🟡", gratis: "⚪" };
-  const filtro = (E.painelFiltro || "").toLowerCase();
-  let linhas = n.top.filter((x) => x.nome.toLowerCase().includes(filtro));
-  if (E.painelOrdem === "nome") linhas = linhas.slice().sort((a, b) => a.nome.localeCompare(b.nome));
-  const corpo = linhas.map((x) =>
-    "<tr><td>" + (selo[x.situacao] || "⚪") + " " + esc(x.nome) + '</td><td class="num">' + x.traducoes + "</td><td>" + esc(x.plano) + "</td></tr>").join("");
   const tabela = '<div class="bloco"><div class="bloco-t">🖥️ Servidores · traduções em 7 dias ' +
     '<input id="pf" class="pf" placeholder="buscar…" value="' + esc(E.painelFiltro || "") + '">' +
-    '<button class="po" id="po">' + (E.painelOrdem === "nome" ? "A→Z" : "mais usados") + "</button></div>" +
-    '<table class="tab"><thead><tr><th>Servidor</th><th class="num">Trad. 7d</th><th>Plano</th></tr></thead><tbody>' +
-    (corpo || '<tr><td colspan="3" class="vazio">nenhum</td></tr>') + "</tbody></table></div>";
+    '<button class="po" id="po"></button></div>' +
+    '<table class="tab"><thead><tr><th>Servidor</th><th class="num">Trad. 7d</th><th>Plano</th></tr></thead>' +
+    '<tbody id="pt"></tbody></table></div>';
 
+  const hora = E.painelEm ? new Date(E.painelEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
   $("msgs").innerHTML = '<div class="painel">' + alertas + hero + '<div class="tiles">' + tiles + "</div>" +
-    carteira + dinheiro + crescimento + funcoes + erros + tabela + "</div>";
-  ligarGrafico("g-trad", n.serie14, n.dias14 || [], "traduções");
-  if (temEntradas) ligarGrafico("g-novos", cr.entradas14, n.dias14 || [], "servidores novos");
-  const pf = $("pf");
-  if (pf) pf.oninput = () => {
-    const p = pf.selectionStart; E.painelFiltro = pf.value; desenharPainel();
-    const novo = $("pf"); if (novo) { novo.focus(); try { novo.setSelectionRange(p, p); } catch (x) {} }
-  };
-  const po = $("po");
-  if (po) po.onclick = () => { E.painelOrdem = E.painelOrdem === "nome" ? "traducoes" : "nome"; desenharPainel(); };
+    '<div class="grade">' + carteira + dinheiro + crescimento + linguas + funcoes + erros + "</div>" +
+    tabela +
+    (hora ? '<div class="atualizado">atualizado às ' + hora + " · ⟳ para recarregar</div>" : "") + "</div>";
+  ligarGrafico("g-trad", n.serie14, dias, ["tradução", "traduções"]);
+  if (temEntradas) ligarGrafico("g-novos", cr.entradas14, dias, ["servidor novo", "servidores novos"]);
+  desenharTabelaDoPainel();
+  /* Buscar e ordenar mexem SÓ na tabela. Antes cada letra redesenhava o painel
+     inteiro: os gráficos voltavam pro "hoje" e o teclado do celular piscava. */
+  $("pf").oninput = () => { E.painelFiltro = $("pf").value; desenharTabelaDoPainel(); };
+  $("po").onclick = () => { E.painelOrdem = E.painelOrdem === "nome" ? "traducoes" : "nome"; desenharTabelaDoPainel(); };
+}
+
+function desenharTabelaDoPainel() {
+  const n = E.painel, corpo = $("pt"); if (!n || !corpo) return;
+  const selo = { pago: "🟢", liberado: "🔵", teste: "🟡", gratis: "⚪" };
+  const filtro = (E.painelFiltro || "").toLowerCase();
+  let linhas = (n.top || []).filter((x) => String(x.nome || "").toLowerCase().includes(filtro));
+  if (E.painelOrdem === "nome") linhas = linhas.slice().sort((a, b) => String(a.nome).localeCompare(String(b.nome)));
+  corpo.innerHTML = linhas.map((x) =>
+    "<tr><td>" + (selo[x.situacao] || "⚪") + " " + esc(x.nome) + '</td><td class="num">' + milhar(x.traducoes) + "</td><td>" + esc(x.plano) + "</td></tr>").join("") ||
+    '<tr><td colspan="3" class="vazio">nenhum</td></tr>';
+  $("po").textContent = E.painelOrdem === "nome" ? "A→Z" : "mais usados";
 }
 
 async function abrirCanal(c) {
