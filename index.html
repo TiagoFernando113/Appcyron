@@ -76,6 +76,23 @@
   .tab .num { text-align: right; font-variant-numeric: tabular-nums; }
   .pf { margin-left: auto; background: #1e1f22; border: 1px solid var(--linha); border-radius: 6px; color: var(--texto); padding: 4px 8px; font: inherit; font-size: 13px; width: 120px; }
   .po { background: var(--linha); border: 0; color: var(--texto); border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+  .alertas { background: rgba(240,178,50,.12); border: 1px solid rgba(240,178,50,.4); border-radius: 10px; padding: 12px 14px; }
+  .alertas.ok { background: rgba(35,165,90,.12); border-color: rgba(35,165,90,.4); color: var(--verde); }
+  .al-t { font-weight: 700; color: var(--amarelo); margin-bottom: 6px; }
+  .al-i { padding: 2px 0; color: var(--texto); }
+  .tr-i { font-size: 13px; font-weight: 700; }
+  .t-up { color: var(--verde); } .t-dn { color: var(--vermelho); }
+  .t-igual, .t-nov { color: var(--fraco); font-size: 12px; }
+  .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 520px) { .duas { grid-template-columns: 1fr; } }
+  .sub-t { font-size: 12px; font-weight: 600; color: var(--fraco); margin-bottom: 6px; }
+  .mini-l { list-style: none; margin: 0; padding: 0; }
+  .mini-l li { padding: 4px 0; border-bottom: 1px solid #2b2d31; font-size: 14px; }
+  .dim { color: var(--fraco); font-size: 12px; }
+  .leg { color: var(--fraco); font-size: 12px; margin-top: 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { background: #1e1f22; border: 1px solid var(--linha); border-radius: 20px; padding: 3px 10px; font-size: 13px; }
+  .chip b { color: var(--forte); }
 
   .cat { font-size: 12px; font-weight: 700; color: var(--fraco); text-transform: uppercase; letter-spacing: .4px; padding: 16px 16px 4px; }
   .ch { display: flex; align-items: center; gap: 8px; margin: 1px 8px; padding: 7px 10px; border-radius: 6px; color: var(--fraco); cursor: pointer; }
@@ -442,6 +459,15 @@ async function abrirPrivado(semRolar) {
 
 const emK = (n) => { n = Number(n) || 0; return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "k" : String(n); };
 const reais = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
+const dataCurta = (ms) => { const d = new Date(ms); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); };
+/* Seta de tendência: verde pra cima, vermelho pra baixo. É o que faz um número
+   dizer alguma coisa — "4.8k" sozinho não diz se é bom. */
+function tendencia(agora, antes) {
+  if (!antes) return agora ? '<span class="t-nov">novo</span>' : "";
+  const p = Math.round(((agora - antes) / antes) * 100);
+  if (!p) return '<span class="t-igual">= igual</span>';
+  return '<span class="t-' + (p > 0 ? "up" : "dn") + '">' + (p > 0 ? "▲" : "▼") + " " + Math.abs(p) + "%</span>";
+}
 
 /* O painel do dono: os mesmos números do /admin, mas em tela web — com gráfico
    de verdade e tabela com busca. Abre na coluna principal (a larga). */
@@ -463,35 +489,60 @@ async function abrirPainel(semRolar) {
 
 function desenharPainel() {
   const n = E.painel; if (!n) return;
-  const d = n.dinheiro, s = n.servidores, h = n.hoje;
-  const tile = (ic, t, v, sub) => '<div class="tile"><div class="ti">' + ic + " " + esc(t) + '</div><div class="tv">' + v +
-    '</div>' + (sub ? '<div class="ts">' + sub + "</div>" : "") + "</div>";
+  const d = n.dinheiro, s = n.servidores, h = n.hoje, cr = n.crescimento || {};
+  const listinha = (itens, fmt) => itens && itens.length
+    ? '<ul class="mini-l">' + itens.map(fmt).join("") + "</ul>" : '<div class="dim">ninguém</div>';
+
+  /* O que PEDE AÇÃO primeiro -- é o que o Discord fazia e faltava aqui. */
+  const alertas = (n.atencao && n.atencao.length)
+    ? '<div class="alertas"><div class="al-t">🔔 Pede atenção</div>' +
+        n.atencao.map((a) => '<div class="al-i">' + a.icone + " " + esc(a.texto) + "</div>").join("") + "</div>"
+    : '<div class="alertas ok">✅ Tudo em ordem — nada pedindo atenção.</div>';
+
+  const tile = (ic, t, v, sub, extra) => '<div class="tile"><div class="ti">' + ic + " " + esc(t) + '</div><div class="tv">' + v +
+    (extra ? ' <span class="tr-i">' + extra + "</span>" : "") + '</div>' + (sub ? '<div class="ts">' + sub + "</div>" : "") + "</div>";
   const tiles =
-    tile("🖥️", "Servidores", s.ativos, "+" + s.novos7 + " · −" + s.sairam7 + " em 7 dias") +
+    tile("🖥️", "Servidores", s.ativos, "+" + s.novos7 + " novos · −" + s.sairam7 + " em 7 dias") +
+    tile("🌐", "Traduções hoje", emK(h.traducoes), "ontem " + emK(h.ontem || 0) + " · " + h.cache + " do cache", tendencia(h.traducoes, h.ontem)) +
     tile("💰", "Pagando", d.pagando, reais(d.receita) + "/mês" + (d.liberado ? " · +" + d.liberado + " liberados" : "")) +
-    tile("🌐", "Traduções hoje", emK(h.traducoes), emK(h.caracteres) + " car · " + h.cache + " do cache") +
     tile("🧪", "Em teste", d.teste, d.vencendo7 + " vencem em 7 dias") +
     tile("🎟️", "Códigos livres", d.codigosLivres, n.beta.ligado ? "🧪 beta ligado" : "") +
-    tile("🐛", "Erros guardados", n.erros, "");
+    tile("🐛", "Erros", n.erros, "");
+
+  const dinheiro = '<div class="bloco"><div class="bloco-t">💰 Dinheiro</div><div class="duas">' +
+    '<div><div class="sub-t">⏰ Vencem em 7 dias</div>' +
+      listinha(d.vencendo, (x) => "<li>" + esc(x.nome) + ' <span class="dim">' + dataCurta(x.ate) + (x.teste ? " · teste" : "") + "</span></li>") + "</div>" +
+    '<div><div class="sub-t">💸 Não renovaram (30d)</div>' +
+      listinha(d.naoRenovaram, (x) => "<li>" + esc(x.nome) + ' <span class="dim">venceu ' + dataCurta(x.venceu) + "</span></li>") + "</div>" +
+    "</div></div>";
+
   const max = Math.max(1, ...n.serie14);
   const barras = n.serie14.map((v, i) =>
     '<div class="barra" title="' + esc(n.dias14[i]) + ": " + v + '"><div class="b' + (i === n.serie14.length - 1 ? " hoje" : "") +
     '" style="height:' + Math.max(2, Math.round((v / max) * 100)) + '%"></div></div>').join("");
+  const idiomas = (cr.idiomas && cr.idiomas.length)
+    ? cr.idiomas.map((x) => '<span class="chip">' + esc(x.idioma) + " <b>" + x.n + "</b></span>").join("") : '<span class="dim">ninguém ainda</span>';
+  const crescimento = '<div class="bloco"><div class="bloco-t">📈 Crescimento <span class="tr-i">' + tendencia(cr.semana, cr.semanaAntes) + "</span></div>" +
+    '<div class="grafico">' + barras + "</div>" +
+    '<div class="leg">traduções · 14 dias · esta semana ' + emK(cr.semana || 0) + " vs " + emK(cr.semanaAntes || 0) + "</div>" +
+    '<div class="duas">' +
+      '<div><div class="sub-t">🆕 Chegaram esta semana</div>' + listinha(cr.novos, (x) => "<li>" + esc(x) + "</li>") + "</div>" +
+      '<div><div class="sub-t">🌐 Idiomas dos membros</div><div class="chips">' + idiomas + "</div></div>" +
+    "</div></div>";
+
   const selo = { pago: "🟢", liberado: "🔵", teste: "🟡", gratis: "⚪" };
   const filtro = (E.painelFiltro || "").toLowerCase();
   let linhas = n.top.filter((x) => x.nome.toLowerCase().includes(filtro));
   if (E.painelOrdem === "nome") linhas = linhas.slice().sort((a, b) => a.nome.localeCompare(b.nome));
   const corpo = linhas.map((x) =>
     "<tr><td>" + (selo[x.situacao] || "⚪") + " " + esc(x.nome) + '</td><td class="num">' + x.traducoes + "</td><td>" + esc(x.plano) + "</td></tr>").join("");
-  $("msgs").innerHTML = '<div class="painel">' +
-    '<div class="tiles">' + tiles + "</div>" +
-    '<div class="bloco"><div class="bloco-t">Traduções — 14 dias</div><div class="grafico">' + barras + "</div></div>" +
-    '<div class="bloco"><div class="bloco-t">Servidores · traduções em 7 dias ' +
-      '<input id="pf" class="pf" placeholder="buscar…" value="' + esc(E.painelFiltro || "") + '">' +
-      '<button class="po" id="po">' + (E.painelOrdem === "nome" ? "A→Z" : "mais usados") + "</button></div>" +
-      '<table class="tab"><thead><tr><th>Servidor</th><th class="num">Trad. 7d</th><th>Plano</th></tr></thead><tbody>' +
-      (corpo || '<tr><td colspan="3" class="vazio">nenhum</td></tr>') + "</tbody></table></div>" +
-    "</div>";
+  const tabela = '<div class="bloco"><div class="bloco-t">🖥️ Servidores · traduções em 7 dias ' +
+    '<input id="pf" class="pf" placeholder="buscar…" value="' + esc(E.painelFiltro || "") + '">' +
+    '<button class="po" id="po">' + (E.painelOrdem === "nome" ? "A→Z" : "mais usados") + "</button></div>" +
+    '<table class="tab"><thead><tr><th>Servidor</th><th class="num">Trad. 7d</th><th>Plano</th></tr></thead><tbody>' +
+    (corpo || '<tr><td colspan="3" class="vazio">nenhum</td></tr>') + "</tbody></table></div>";
+
+  $("msgs").innerHTML = '<div class="painel">' + alertas + '<div class="tiles">' + tiles + "</div>" + dinheiro + crescimento + tabela + "</div>";
   const pf = $("pf");
   if (pf) pf.oninput = () => {
     const p = pf.selectionStart; E.painelFiltro = pf.value; desenharPainel();
