@@ -57,6 +57,26 @@
   .srv .ic.redondo { border-radius: 50%; }
   .sep { height: 1px; background: #111214; margin: 8px 12px; }
 
+  /* Painel do dono */
+  .painel { padding: 16px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .tile { background: var(--painel); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; }
+  .tile .ti { font-size: 12px; color: var(--fraco); }
+  .tile .tv { font-size: 26px; font-weight: 800; color: var(--forte); margin-top: 2px; line-height: 1.1; }
+  .tile .ts { font-size: 12px; color: var(--fraco); margin-top: 3px; }
+  .bloco { margin-top: 16px; background: var(--painel); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; }
+  .bloco-t { font-size: 13px; font-weight: 700; color: var(--forte); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .grafico { display: flex; align-items: flex-end; gap: 3px; height: 92px; }
+  .barra { flex: 1; display: flex; align-items: flex-end; height: 100%; }
+  .barra .b { width: 100%; background: var(--azul); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .barra .b.hoje { background: var(--verde); }
+  .tab { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .tab th { text-align: left; color: var(--fraco); font-weight: 600; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--linha); }
+  .tab td { padding: 7px 8px; border-bottom: 1px solid #2b2d31; }
+  .tab .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .pf { margin-left: auto; background: #1e1f22; border: 1px solid var(--linha); border-radius: 6px; color: var(--texto); padding: 4px 8px; font: inherit; font-size: 13px; width: 120px; }
+  .po { background: var(--linha); border: 0; color: var(--texto); border-radius: 6px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+
   .cat { font-size: 12px; font-weight: 700; color: var(--fraco); text-transform: uppercase; letter-spacing: .4px; padding: 16px 16px 4px; }
   .ch { display: flex; align-items: center; gap: 8px; margin: 1px 8px; padding: 7px 10px; border-radius: 6px; color: var(--fraco); cursor: pointer; }
   .ch:hover { background: #35373c; color: var(--texto); }
@@ -330,7 +350,9 @@ function aoVoltar() {
   /* Repõe a trava: o próximo voltar também é tratado aqui, nunca no Discord. */
   try { history.pushState({ cyron: "app" }, ""); } catch (e) {}
   if (!matchMedia("(max-width: 820px)").matches) return; // no PC as colunas ficam juntas
-  if ($("col-m").classList.contains("ativa") && (E.c || E.canal)) {
+  if ($("col-m").classList.contains("ativa") && E.modo === "painel") {
+    mostrarColuna("s"); // o painel abre direto na coluna larga; volta para a lista
+  } else if ($("col-m").classList.contains("ativa") && (E.c || E.canal)) {
     pararPoll(); E.c = ""; avisarCanalAoVivo(); mostrarColuna("c");
   } else if ($("col-c").classList.contains("ativa")) {
     mostrarColuna("s");
@@ -339,10 +361,12 @@ function aoVoltar() {
 }
 
 function desenharServidores() {
-  const privado = '<div class="srv' + (E.g === "privado" ? " atual" : "") + '" data-g="privado">' +
+  const topo = '<div class="srv' + (E.g === "painel" ? " atual" : "") + '" data-g="painel">' +
+    '<div class="ic">📊</div><div class="nm"><b>Painel do dono</b><small>números da CYRON</small></div></div>' +
+    '<div class="srv' + (E.g === "privado" ? " atual" : "") + '" data-g="privado">' +
     '<div class="ic">✉️</div><div class="nm"><b>Mensagens privadas</b><small>quem fala com a CYRON</small></div></div>' +
     '<div class="sep"></div>';
-  $("lista-s").innerHTML = privado + (E.servidores.length ? E.servidores.map((s) =>
+  $("lista-s").innerHTML = topo + (E.servidores.length ? E.servidores.map((s) =>
     '<div class="srv' + (s.id === E.g ? " atual" : "") + '" data-g="' + s.id + '"><div class="ic">' +
     (s.icone ? '<img loading="lazy" src="' + esc(s.icone) + '" alt="">' : esc((s.nome || "?").trim().charAt(0).toUpperCase())) +
     '</div><div class="nm"><b>' + esc(s.nome) + "</b><small>" + s.membros + " membros</small></div></div>").join("")
@@ -385,6 +409,7 @@ function desenharMensagens(manterPosicao) {
 function erroNa(lugar, e) { if (e.message !== "login" && e.message !== "dono") $(lugar).innerHTML = '<div class="erro">' + esc(e.message) + "</div>"; }
 
 async function abrirServidor(g, semRolar) {
+  if (g === "painel") return abrirPainel(semRolar);
   if (g === "privado") return abrirPrivado(semRolar);
   E.modo = "servidor";
   E.g = g; E.c = ""; E.canais = []; pararPoll(); avisarCanalAoVivo();
@@ -393,7 +418,7 @@ async function abrirServidor(g, semRolar) {
   $("nome-s").textContent = s ? s.nome : "";
   $("lista-c").innerHTML = '<div class="vazio">Carregando…</div>';
   if (!semRolar) mostrarColuna("c");
-  try { const j = await api("/visao/canais?g=" + g); E.canais = j.canais; desenharCanais(); }
+  try { const j = await api("/visao/canais?g=" + g); E.canais = j.canais || []; desenharCanais(); }
   catch (e) { erroNa("lista-c", e); }
 }
 
@@ -411,6 +436,69 @@ async function abrirPrivado(semRolar) {
     E.canais = (j.conversas || []).map((p) => ({ id: p.id, nome: p.nome, avatar: p.avatar, usuario: p.usuario, tipo: "privado", ler: true, escrever: true }));
     desenharPrivados();
   } catch (e) { erroNa("lista-c", e); }
+}
+
+/* ---------------- painel do dono ---------------- */
+
+const emK = (n) => { n = Number(n) || 0; return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "k" : String(n); };
+const reais = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
+
+/* O painel do dono: os mesmos números do /admin, mas em tela web — com gráfico
+   de verdade e tabela com busca. Abre na coluna principal (a larga). */
+async function abrirPainel(semRolar) {
+  E.modo = "painel"; E.g = "painel"; E.c = ""; E.canal = null; pararPoll(); avisarCanalAoVivo();
+  desenharServidores();
+  $("nome-s").textContent = "Painel do dono";
+  $("nome-c").textContent = "📊 Painel do dono";
+  $("aovivo").hidden = true;
+  $("escrever").hidden = true;
+  $("msgs").innerHTML = '<div class="vazio">Carregando…</div>';
+  mostrarColuna("m");
+  try {
+    E.painel = await api("/visao/admin/numeros");
+    E.painelFiltro = E.painelFiltro || ""; E.painelOrdem = E.painelOrdem || "traducoes";
+    desenharPainel();
+  } catch (e) { erroNa("msgs", e); }
+}
+
+function desenharPainel() {
+  const n = E.painel; if (!n) return;
+  const d = n.dinheiro, s = n.servidores, h = n.hoje;
+  const tile = (ic, t, v, sub) => '<div class="tile"><div class="ti">' + ic + " " + esc(t) + '</div><div class="tv">' + v +
+    '</div>' + (sub ? '<div class="ts">' + sub + "</div>" : "") + "</div>";
+  const tiles =
+    tile("🖥️", "Servidores", s.ativos, "+" + s.novos7 + " · −" + s.sairam7 + " em 7 dias") +
+    tile("💰", "Pagando", d.pagando, reais(d.receita) + "/mês" + (d.liberado ? " · +" + d.liberado + " liberados" : "")) +
+    tile("🌐", "Traduções hoje", emK(h.traducoes), emK(h.caracteres) + " car · " + h.cache + " do cache") +
+    tile("🧪", "Em teste", d.teste, d.vencendo7 + " vencem em 7 dias") +
+    tile("🎟️", "Códigos livres", d.codigosLivres, n.beta.ligado ? "🧪 beta ligado" : "") +
+    tile("🐛", "Erros guardados", n.erros, "");
+  const max = Math.max(1, ...n.serie14);
+  const barras = n.serie14.map((v, i) =>
+    '<div class="barra" title="' + esc(n.dias14[i]) + ": " + v + '"><div class="b' + (i === n.serie14.length - 1 ? " hoje" : "") +
+    '" style="height:' + Math.max(2, Math.round((v / max) * 100)) + '%"></div></div>').join("");
+  const selo = { pago: "🟢", liberado: "🔵", teste: "🟡", gratis: "⚪" };
+  const filtro = (E.painelFiltro || "").toLowerCase();
+  let linhas = n.top.filter((x) => x.nome.toLowerCase().includes(filtro));
+  if (E.painelOrdem === "nome") linhas = linhas.slice().sort((a, b) => a.nome.localeCompare(b.nome));
+  const corpo = linhas.map((x) =>
+    "<tr><td>" + (selo[x.situacao] || "⚪") + " " + esc(x.nome) + '</td><td class="num">' + x.traducoes + "</td><td>" + esc(x.plano) + "</td></tr>").join("");
+  $("msgs").innerHTML = '<div class="painel">' +
+    '<div class="tiles">' + tiles + "</div>" +
+    '<div class="bloco"><div class="bloco-t">Traduções — 14 dias</div><div class="grafico">' + barras + "</div></div>" +
+    '<div class="bloco"><div class="bloco-t">Servidores · traduções em 7 dias ' +
+      '<input id="pf" class="pf" placeholder="buscar…" value="' + esc(E.painelFiltro || "") + '">' +
+      '<button class="po" id="po">' + (E.painelOrdem === "nome" ? "A→Z" : "mais usados") + "</button></div>" +
+      '<table class="tab"><thead><tr><th>Servidor</th><th class="num">Trad. 7d</th><th>Plano</th></tr></thead><tbody>' +
+      (corpo || '<tr><td colspan="3" class="vazio">nenhum</td></tr>') + "</tbody></table></div>" +
+    "</div>";
+  const pf = $("pf");
+  if (pf) pf.oninput = () => {
+    const p = pf.selectionStart; E.painelFiltro = pf.value; desenharPainel();
+    const novo = $("pf"); if (novo) { novo.focus(); try { novo.setSelectionRange(p, p); } catch (x) {} }
+  };
+  const po = $("po");
+  if (po) po.onclick = () => { E.painelOrdem = E.painelOrdem === "nome" ? "traducoes" : "nome"; desenharPainel(); };
 }
 
 async function abrirCanal(c) {
@@ -522,7 +610,7 @@ function ajustarCaixa() { const t = $("texto"); t.style.height = "auto"; t.style
 
 $("bt-entrar").onclick = entrar;
 $("bt-sair").onclick = sair;
-$("bt-recarregar").onclick = () => E.c && abrirCanal(E.c);
+$("bt-recarregar").onclick = () => E.modo === "painel" ? abrirPainel(true) : (E.c && abrirCanal(E.c));
 $("bt-enviar").onclick = enviar;
 $("texto").addEventListener("input", ajustarCaixa);
 $("texto").addEventListener("keydown", (ev) => {
