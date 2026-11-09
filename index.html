@@ -58,14 +58,38 @@
   .sep { height: 1px; background: #111214; margin: 8px 12px; }
 
   /* Painel do dono */
-  .painel { padding: 16px; }
-  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-  .tile { background: var(--painel); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; }
-  .tile .ti { font-size: 12px; color: var(--fraco); }
-  .tile .tv { font-size: 26px; font-weight: 800; color: var(--forte); margin-top: 2px; line-height: 1.1; }
-  .tile .ts { font-size: 12px; color: var(--fraco); margin-top: 3px; }
-  .bloco { margin-top: 16px; background: var(--painel); border: 1px solid var(--linha); border-radius: 10px; padding: 12px 14px; }
+  .painel { padding: 16px; max-width: 1120px; margin: 0 auto; }
+  /* Faixa de destaque: o número que importa, grande, com mini-gráfico. */
+  .hero { background: linear-gradient(135deg, #2b2d31, #26282c); border: 1px solid var(--linha);
+    border-radius: 14px; padding: 16px 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .hero-e { flex: 1 1 160px; min-width: 140px; }
+  .hero-r { font-size: 12px; color: var(--fraco); font-weight: 600; }
+  .hero-v { font-size: 44px; font-weight: 800; color: var(--forte); line-height: 1; margin: 4px 0; letter-spacing: -1px; }
+  .hero-s { font-size: 12px; color: var(--fraco); }
+  .hero-g { flex: 1 1 180px; min-width: 150px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
+  .tile { background: var(--painel); border: 1px solid var(--linha); border-left: 3px solid var(--ac, var(--azul));
+    border-radius: 10px; padding: 11px 13px; }
+  .tile .ti { font-size: 11px; color: var(--fraco); display: flex; align-items: center; gap: 5px; }
+  .tile .tv { font-size: 25px; font-weight: 800; color: var(--forte); margin-top: 3px; line-height: 1.1; display: flex; align-items: baseline; gap: 6px; }
+  .tile .ts { font-size: 11px; color: var(--fraco); margin-top: 3px; }
+  .bloco { margin-top: 14px; background: var(--painel); border: 1px solid var(--linha); border-radius: 12px; padding: 13px 15px; }
   .bloco-t { font-size: 13px; font-weight: 700; color: var(--forte); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  /* Gráfico de área (SVG) — é o que faz parecer painel de verdade. É mexível:
+     touch-action none pra arrastar o dedo sem rolar a página. */
+  .area { width: 100%; height: auto; display: block; overflow: visible; touch-action: none; cursor: crosshair; }
+  .area.mini { max-height: 60px; }
+  .leitura { font-size: 14px; color: var(--fraco); min-height: 24px; margin-bottom: 4px; }
+  .leitura b { font-size: 22px; font-weight: 800; color: var(--forte); }
+  @media (max-width: 520px) { .hero { flex-direction: column; align-items: stretch; } }
+  .d-n { fill: var(--forte); font-size: 26px; font-weight: 800; }
+  .d-l { fill: var(--fraco); font-size: 11px; }
+  .donut-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .donut { flex: 0 0 auto; }
+  .legenda { list-style: none; margin: 0; padding: 0; flex: 1 1 130px; min-width: 120px; }
+  .legenda li { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; color: var(--texto); }
+  .legenda b { margin-left: auto; color: var(--forte); font-variant-numeric: tabular-nums; }
+  .lp { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
   .grafico { display: flex; align-items: flex-end; gap: 3px; height: 92px; }
   .barra { flex: 1; display: flex; align-items: flex-end; height: 100%; }
   .barra .b { width: 100%; background: var(--azul); border-radius: 3px 3px 0 0; min-height: 2px; }
@@ -93,6 +117,16 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { background: #1e1f22; border: 1px solid var(--linha); border-radius: 20px; padding: 3px 10px; font-size: 13px; }
   .chip b { color: var(--forte); }
+  .grafico.baixo { height: 56px; }
+  .barras-h { display: flex; flex-direction: column; gap: 6px; }
+  .bh { display: grid; grid-template-columns: 90px 1fr auto; align-items: center; gap: 8px; font-size: 13px; }
+  .bh-n { color: var(--texto); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bh-b { height: 10px; background: #1e1f22; border-radius: 6px; overflow: hidden; }
+  .bh-b > span { display: block; height: 100%; background: var(--azul); border-radius: 6px; }
+  .bh-v { color: var(--forte); font-variant-numeric: tabular-nums; }
+  .erro-i { padding: 8px 0; border-bottom: 1px solid #2b2d31; }
+  .erro-h { font-weight: 600; color: var(--vermelho); font-size: 13px; }
+  .erro-p { color: var(--texto); font-size: 13px; white-space: pre-wrap; word-break: break-word; margin-top: 2px; }
 
   .cat { font-size: 12px; font-weight: 700; color: var(--fraco); text-transform: uppercase; letter-spacing: .4px; padding: 16px 16px 4px; }
   .ch { display: flex; align-items: center; gap: 8px; margin: 1px 8px; padding: 7px 10px; border-radius: 6px; color: var(--fraco); cursor: pointer; }
@@ -458,6 +492,7 @@ async function abrirPrivado(semRolar) {
 /* ---------------- painel do dono ---------------- */
 
 const emK = (n) => { n = Number(n) || 0; return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "k" : String(n); };
+const milhar = (n) => (Number(n) || 0).toLocaleString("pt-BR");
 const reais = (v) => "R$ " + (Number(v) || 0).toFixed(2).replace(".", ",");
 const dataCurta = (ms) => { const d = new Date(ms); return String(d.getDate()).padStart(2, "0") + "/" + String(d.getMonth() + 1).padStart(2, "0"); };
 /* Seta de tendência: verde pra cima, vermelho pra baixo. É o que faz um número
@@ -487,6 +522,84 @@ async function abrirPainel(semRolar) {
   } catch (e) { erroNa("msgs", e); }
 }
 
+/* Gráfico de área em SVG. Curva suave (Catmull-Rom→Bézier), preenchimento com
+   degradê, ponto no último dia. Mexível: veja ligarGrafico. */
+const GW = 600, GH = 150, GP = 10;
+function svgLinha(id, serie, cor, mini) {
+  const mx = Math.max(1, ...serie), mn = Math.min(0, ...serie), n = serie.length;
+  const X = (i) => n <= 1 ? GW / 2 : GP + (i * (GW - 2 * GP)) / (n - 1);
+  const Y = (v) => GH - GP - ((v - mn) / ((mx - mn) || 1)) * (GH - 2 * GP);
+  const p = serie.map((v, i) => [X(i), Y(v)]);
+  let linha = "M" + p[0][0] + " " + p[0][1];
+  for (let i = 0; i < p.length - 1; i++) {
+    const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], e = p[i + 2] || c;
+    linha += " C" + (b[0] + (c[0] - a[0]) / 6) + " " + (b[1] + (c[1] - a[1]) / 6) + " " +
+      (c[0] - (e[0] - b[0]) / 6) + " " + (c[1] - (e[1] - b[1]) / 6) + " " + c[0] + " " + c[1];
+  }
+  const area = linha + " L" + p[n - 1][0] + " " + (GH - GP) + " L" + p[0][0] + " " + (GH - GP) + " Z";
+  return '<svg id="' + id + '" class="area' + (mini ? " mini" : "") + '" viewBox="0 0 ' + GW + " " + GH + '">' +
+    '<defs><linearGradient id="' + id + '-g" x1="0" x2="0" y1="0" y2="1">' +
+    '<stop offset="0" stop-color="' + cor + '" stop-opacity=".30"/>' +
+    '<stop offset="1" stop-color="' + cor + '" stop-opacity="0"/></linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#' + id + '-g)"/>' +
+    '<path d="' + linha + '" fill="none" stroke="' + cor + '" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>' +
+    '<line class="guia" x1="0" y1="' + GP + '" x2="0" y2="' + (GH - GP) + '" stroke="' + cor + '" stroke-width="1" vector-effect="non-scaling-stroke" opacity="0"/>' +
+    '<circle class="ponto" r="5" fill="' + cor + '" stroke="#1e1f22" stroke-width="2.5" opacity="0"/></svg>';
+}
+/* Deixa o gráfico mexível: tocar/arrastar move a guia e escreve o valor exato
+   do dia na "leitura" acima. Começa mostrando hoje. */
+function ligarGrafico(id, serie, rotulos, unidade) {
+  const svg = document.getElementById(id); if (!svg) return;
+  const guia = svg.querySelector(".guia"), ponto = svg.querySelector(".ponto");
+  const leitura = document.getElementById(id + "-r");
+  const n = serie.length, mx = Math.max(1, ...serie), mn = Math.min(0, ...serie);
+  const X = (i) => n <= 1 ? GW / 2 : GP + (i * (GW - 2 * GP)) / (n - 1);
+  const Y = (v) => GH - GP - ((v - mn) / ((mx - mn) || 1)) * (GH - 2 * GP);
+  const mostrar = (i) => {
+    i = Math.max(0, Math.min(n - 1, i));
+    const v = serie[i], ant = i > 0 ? serie[i - 1] : null;
+    guia.setAttribute("x1", X(i)); guia.setAttribute("x2", X(i)); guia.setAttribute("opacity", ".55");
+    ponto.setAttribute("cx", X(i)); ponto.setAttribute("cy", Y(v)); ponto.setAttribute("opacity", "1");
+    if (leitura) {
+      const d = ant == null ? "" : ' <span class="' + (v >= ant ? "t-up" : "t-dn") + '">' + (v >= ant ? "▲" : "▼") + " " +
+        (ant ? Math.abs(Math.round(((v - ant) / ant) * 100)) : 0) + "%</span>";
+      leitura.innerHTML = "<b>" + milhar(v) + "</b> " + (unidade || "") +
+        ' <span class="dim">· ' + esc(rotulos[i] || "") + "</span>" + d;
+    }
+  };
+  const pos = (ev) => {
+    const r = svg.getBoundingClientRect();
+    const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    mostrar(Math.round(Math.max(0, Math.min(1, cx / r.width)) * (n - 1)));
+  };
+  svg.addEventListener("pointerdown", pos);
+  svg.addEventListener("pointermove", (e) => { if (e.buttons || e.pointerType !== "mouse") pos(e); });
+  svg.addEventListener("mousemove", pos);
+  svg.addEventListener("touchstart", pos, { passive: true });
+  svg.addEventListener("touchmove", (e) => { pos(e); e.preventDefault(); }, { passive: false });
+  mostrar(n - 1);
+}
+/* Rosca (donut) em SVG pela técnica de dasharray acumulado. Mostra o total no
+   meio e a legenda com os números exatos ao lado. */
+function svgDonut(partes) {
+  const vis = partes.filter((p) => p.valor > 0), tot = vis.reduce((s, p) => s + p.valor, 0);
+  const cx = 70, cy = 70, rho = 48, sw = 20, C = 2 * Math.PI * rho;
+  let acc = 0;
+  const anel = tot ? vis.map((p) => {
+    const len = (p.valor / tot) * C;
+    const seg = '<circle cx="' + cx + '" cy="' + cy + '" r="' + rho + '" fill="none" stroke="' + p.cor +
+      '" stroke-width="' + sw + '" stroke-dasharray="' + len + " " + (C - len) + '" stroke-dashoffset="' + (-acc) +
+      '" transform="rotate(-90 ' + cx + " " + cy + ')"/>';
+    acc += len; return seg;
+  }).join("") : '<circle cx="' + cx + '" cy="' + cy + '" r="' + rho + '" fill="none" stroke="#3f4147" stroke-width="' + sw + '"/>';
+  const svg = '<svg class="donut" viewBox="0 0 140 140" width="132" height="132">' + anel +
+    '<text x="70" y="66" text-anchor="middle" class="d-n">' + tot + "</text>" +
+    '<text x="70" y="84" text-anchor="middle" class="d-l">servidores</text></svg>';
+  const leg = '<ul class="legenda">' + partes.map((p) => '<li><span class="lp" style="background:' + p.cor + '"></span>' +
+    esc(p.rotulo) + " <b>" + p.valor + "</b></li>").join("") + "</ul>";
+  return '<div class="donut-wrap">' + svg + leg + "</div>";
+}
+
 function desenharPainel() {
   const n = E.painel; if (!n) return;
   const d = n.dinheiro, s = n.servidores, h = n.hoje, cr = n.crescimento || {};
@@ -499,15 +612,33 @@ function desenharPainel() {
         n.atencao.map((a) => '<div class="al-i">' + a.icone + " " + esc(a.texto) + "</div>").join("") + "</div>"
     : '<div class="alertas ok">✅ Tudo em ordem — nada pedindo atenção.</div>';
 
-  const tile = (ic, t, v, sub, extra) => '<div class="tile"><div class="ti">' + ic + " " + esc(t) + '</div><div class="tv">' + v +
+  /* Faixa de destaque: traduções dos 14 dias num gráfico MEXÍVEL. Arrasta o dedo
+     e a leitura acima mostra o número exato do dia -- "subiu, e subiu TANTO". */
+  const hero = '<div class="hero">' +
+    '<div class="hero-e"><div class="hero-r">🌐 Traduções hoje</div>' +
+      '<div class="hero-v">' + milhar(h.traducoes) + "</div>" +
+      '<div class="hero-s">ontem ' + milhar(h.ontem || 0) + " · " + tendencia(h.traducoes, h.ontem) + "</div></div>" +
+    '<div class="hero-g"><div class="leitura" id="g-trad-r"></div>' + svgLinha("g-trad", n.serie14, "#5865f2") +
+      '<div class="dim" style="margin-top:4px">👆 arraste pra ver cada dia</div></div></div>';
+
+  const tile = (ic, t, v, sub, extra, cor) => '<div class="tile" style="--ac:' + (cor || "var(--azul)") + '"><div class="ti">' + ic + " " + esc(t) + '</div><div class="tv">' + v +
     (extra ? ' <span class="tr-i">' + extra + "</span>" : "") + '</div>' + (sub ? '<div class="ts">' + sub + "</div>" : "") + "</div>";
   const tiles =
-    tile("🖥️", "Servidores", s.ativos, "+" + s.novos7 + " novos · −" + s.sairam7 + " em 7 dias") +
-    tile("🌐", "Traduções hoje", emK(h.traducoes), "ontem " + emK(h.ontem || 0) + " · " + h.cache + " do cache", tendencia(h.traducoes, h.ontem)) +
-    tile("💰", "Pagando", d.pagando, reais(d.receita) + "/mês" + (d.liberado ? " · +" + d.liberado + " liberados" : "")) +
-    tile("🧪", "Em teste", d.teste, d.vencendo7 + " vencem em 7 dias") +
-    tile("🎟️", "Códigos livres", d.codigosLivres, n.beta.ligado ? "🧪 beta ligado" : "") +
-    tile("🐛", "Erros", n.erros, "");
+    tile("🖥️", "Servidores", s.ativos, "+" + s.novos7 + " novos · −" + s.sairam7 + " em 7 dias", "", "#5865f2") +
+    tile("💰", "Pagando", d.pagando, reais(d.receita) + "/mês" + (d.liberado ? " · +" + d.liberado + " liberados" : ""), "", "#23a55a") +
+    tile("🧪", "Em teste", d.teste, d.vencendo7 + " vencem em 7 dias", "", "#f0b232") +
+    tile("🎟️", "Códigos livres", d.codigosLivres, n.beta.ligado ? "🧪 beta ligado" : "", "", "#00a8fc") +
+    tile("📈", "Nesta semana", emK(cr.semana || 0), "antes " + emK(cr.semanaAntes || 0), tendencia(cr.semana, cr.semanaAntes), "#eb459e") +
+    tile("🐛", "Erros", n.erros, n.erros ? "veja embaixo" : "tudo limpo", "", n.erros ? "#f23f43" : "#949ba4");
+
+  /* Rosca da carteira: quem paga, quem testa, quem foi liberado, quem é grátis. */
+  const carteira = '<div class="bloco"><div class="bloco-t">🧩 Carteira de servidores</div>' +
+    svgDonut([
+      { rotulo: "Pagando", valor: d.pagando || 0, cor: "#23a55a" },
+      { rotulo: "Em teste", valor: d.teste || 0, cor: "#f0b232" },
+      { rotulo: "Liberados", valor: d.liberado || 0, cor: "#00a8fc" },
+      { rotulo: "Grátis", valor: d.gratis || 0, cor: "#949ba4" },
+    ]) + "</div>";
 
   const dinheiro = '<div class="bloco"><div class="bloco-t">💰 Dinheiro</div><div class="duas">' +
     '<div><div class="sub-t">⏰ Vencem em 7 dias</div>' +
@@ -516,19 +647,37 @@ function desenharPainel() {
       listinha(d.naoRenovaram, (x) => "<li>" + esc(x.nome) + ' <span class="dim">venceu ' + dataCurta(x.venceu) + "</span></li>") + "</div>" +
     "</div></div>";
 
-  const max = Math.max(1, ...n.serie14);
-  const barras = n.serie14.map((v, i) =>
-    '<div class="barra" title="' + esc(n.dias14[i]) + ": " + v + '"><div class="b' + (i === n.serie14.length - 1 ? " hoje" : "") +
-    '" style="height:' + Math.max(2, Math.round((v / max) * 100)) + '%"></div></div>').join("");
+  /* Barras horizontais pra idiomas e funções: ranking é mais legível assim. */
+  const barrasH = (itens, rotulo, valor, sub) => {
+    const mx = Math.max(1, ...itens.map(valor));
+    return '<div class="barras-h">' + itens.map((x) => '<div class="bh"><span class="bh-n" title="' + esc(rotulo(x)) + '">' + esc(rotulo(x)) +
+      '</span><span class="bh-b"><span style="width:' + Math.round((valor(x) / mx) * 100) + '%"></span></span>' +
+      '<span class="bh-v">' + valor(x) + (sub && sub(x) ? ' <span class="dim">· ' + sub(x) + "</span>" : "") + "</span></div>").join("") + "</div>";
+  };
   const idiomas = (cr.idiomas && cr.idiomas.length)
-    ? cr.idiomas.map((x) => '<span class="chip">' + esc(x.idioma) + " <b>" + x.n + "</b></span>").join("") : '<span class="dim">ninguém ainda</span>';
-  const crescimento = '<div class="bloco"><div class="bloco-t">📈 Crescimento <span class="tr-i">' + tendencia(cr.semana, cr.semanaAntes) + "</span></div>" +
-    '<div class="grafico">' + barras + "</div>" +
-    '<div class="leg">traduções · 14 dias · esta semana ' + emK(cr.semana || 0) + " vs " + emK(cr.semanaAntes || 0) + "</div>" +
-    '<div class="duas">' +
+    ? barrasH(cr.idiomas, (x) => x.idioma, (x) => x.n) : '<span class="dim">ninguém ainda</span>';
+  const temEntradas = cr.entradas14 && cr.entradas14.length;
+  const crescimento = '<div class="bloco"><div class="bloco-t">🌱 Servidores novos · 14 dias</div>' +
+    (temEntradas
+      ? '<div class="leitura" id="g-novos-r"></div>' + svgLinha("g-novos", cr.entradas14, "#23a55a") +
+        '<div class="dim" style="margin-top:4px">👆 arraste pra ver cada dia · +' + (s.novos7 || 0) + " nesta semana</div>"
+      : '<div class="dim">sem dados ainda</div>') +
+    '<div class="duas" style="margin-top:14px">' +
       '<div><div class="sub-t">🆕 Chegaram esta semana</div>' + listinha(cr.novos, (x) => "<li>" + esc(x) + "</li>") + "</div>" +
-      '<div><div class="sub-t">🌐 Idiomas dos membros</div><div class="chips">' + idiomas + "</div></div>" +
+      '<div><div class="sub-t">🌐 Idiomas dos membros</div>' + idiomas + "</div>" +
     "</div></div>";
+
+  const funcoes = '<div class="bloco"><div class="bloco-t">📊 Funções mais usadas · mês</div>' +
+    ((n.funcoes && n.funcoes.length) ? barrasH(n.funcoes, (x) => x.nome, (x) => x.n, (x) => x.servidores || 0)
+      : '<div class="dim">nada contado este mês ainda</div>') + "</div>";
+
+  const horaErro = (ms) => { if (!ms) return ""; const dt = new Date(ms);
+    return dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); };
+  const erros = '<div class="bloco"><div class="bloco-t">🐛 Últimos erros</div>' +
+    ((n.errosLista && n.errosLista.length)
+      ? n.errosLista.map((e) => '<div class="erro-i"><div class="erro-h">' + esc(e.onde || "erro") + ' <span class="dim">' + horaErro(e.quando) + "</span></div>" +
+          '<div class="erro-p">' + esc(e.porque || "") + "</div></div>").join("")
+      : '<div class="dim">✅ nenhum erro desde que o bot subiu</div>') + "</div>";
 
   const selo = { pago: "🟢", liberado: "🔵", teste: "🟡", gratis: "⚪" };
   const filtro = (E.painelFiltro || "").toLowerCase();
@@ -542,7 +691,10 @@ function desenharPainel() {
     '<table class="tab"><thead><tr><th>Servidor</th><th class="num">Trad. 7d</th><th>Plano</th></tr></thead><tbody>' +
     (corpo || '<tr><td colspan="3" class="vazio">nenhum</td></tr>') + "</tbody></table></div>";
 
-  $("msgs").innerHTML = '<div class="painel">' + alertas + '<div class="tiles">' + tiles + "</div>" + dinheiro + crescimento + tabela + "</div>";
+  $("msgs").innerHTML = '<div class="painel">' + alertas + hero + '<div class="tiles">' + tiles + "</div>" +
+    carteira + dinheiro + crescimento + funcoes + erros + tabela + "</div>";
+  ligarGrafico("g-trad", n.serie14, n.dias14 || [], "traduções");
+  if (temEntradas) ligarGrafico("g-novos", cr.entradas14, n.dias14 || [], "servidores novos");
   const pf = $("pf");
   if (pf) pf.oninput = () => {
     const p = pf.selectionStart; E.painelFiltro = pf.value; desenharPainel();
