@@ -581,6 +581,19 @@ function desenharPainel() {
           '<div class="erro-p">' + esc(e.porque || "") + "</div></div>").join("")
       : '<div class="dim">✅ nenhum erro desde que o bot subiu</div>') + "</div>";
 
+  /* O funil: em que passo cada servidor parou. Instalar não é usar -- doze
+     servidores e dois conversando pede saber ONDE os outros dez pararam,
+     porque cada passo pede um conserto diferente. */
+  const fu = n.funil;
+  const funil = fu && Array.isArray(fu.servidores) && fu.servidores.length ? '<div class="bloco"><div class="bloco-t">🧭 Funil · onde cada servidor parou (7 dias)</div>' +
+    barrasH(fu.etapas || [], (x) => x.nome, (x) => x.n, null, "#5865f2") +
+    '<div class="sub-t" style="margin-top:14px">Servidor por servidor</div>' +
+    fu.servidores.map((x) => '<div class="fun-i"><div class="fun-h"><b>' + esc(x.nome) + '</b><span class="fun-e">' + esc((fu.nomes || {})[x.etapa] || x.etapa) + "</span></div>" +
+      '<div class="dim">' + milhar(x.membros) + " membros · " + milhar(x.comIdioma) + " com idioma · " +
+      (x.mensagens7d == null ? "mensagens: medindo" : milhar(x.mensagens7d) + " mensagens") + " · " +
+      milhar(x.falas7d) + " falas nas salas" + (x.pessoas7d ? " (" + milhar(x.pessoas7d) + " pessoas)" : "") + "</div></div>").join("") +
+    '<div class="dim" style="margin-top:8px">' + (fu.medindoDesde ? "mensagens contadas desde " + esc(diaCurto(fu.medindoDesde)) : "a contagem de mensagens começou agora; em um dia ela aparece") + "</div></div>" : "";
+
   const tabela = '<div class="bloco"><div class="bloco-t">🖥️ Servidores · traduções em 7 dias ' +
     '<input id="pf" class="pf" placeholder="buscar…" value="' + esc(E.painelFiltro || "") + '">' +
     '<button class="po" id="po"></button></div>' +
@@ -589,7 +602,7 @@ function desenharPainel() {
 
   const hora = E.painelEm ? new Date(E.painelEm).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "";
   $("msgs").innerHTML = '<div class="painel">' + alertas + hero + '<div class="tiles">' + tiles + "</div>" +
-    '<div class="grade">' + carteira + dinheiro + crescimento + linguas + funcoes + erros + "</div>" +
+    funil + '<div class="grade">' + carteira + dinheiro + crescimento + linguas + funcoes + erros + "</div>" +
     tabela +
     (hora ? '<div class="atualizado">atualizado às ' + hora + " · ⟳ para recarregar</div>" : "") + "</div>";
   ligarGrafico("g-trad", n.serie14, dias, ["tradução", "traduções"]);
