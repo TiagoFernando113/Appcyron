@@ -156,6 +156,29 @@ const listas = await pagina.evaluate(() => {
 });
 verdade("nome de servidor, canal e pessoa não vira tag", !listas.length, JSON.stringify(listas.slice(0, 4)));
 
+/* Os emojis da CYRON: o nome e o id vêm do bot, mas o painel os desenha numa
+   página que guarda o login. Nome torto não entra, e o que entra é escapado. */
+const painelEmo = await pagina.evaluate(async () => {
+  const x = "\"><img src=x onerror=window.furo=1>";
+  const original = window.fetch;
+  window.fetch = async () => new Response(JSON.stringify({ emojis: [
+    { atalho: x, nome: x, id: x, animado: true, grupo: x },
+    { atalho: "ks_brilho", nome: "ks_brilho_abc123", id: "900000000000000001", animado: true, grupo: "kingshot" },
+    { atalho: "ok", nome: "ok", id: "javascript:1", grupo: "figurinhas" },
+    { atalho: "gg", nome: "gg", id: "900000000000000003", animado: false, grupo: x }] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  EMO.lista = null; EMO.grupo = "kingshot";
+  await carregarEmojis();
+  window.fetch = original;
+  desenharEmojis();
+  const html = document.getElementById("abas-emo").innerHTML + document.getElementById("grade-emo").innerHTML;
+  /* Os botões e os data- do painel são meus; o que sobrar é o que veio de fora. */
+  const meu = html.replace(/<button/g, "<span").replace(/<\/button>/g, "</span>").replace(/data-(grupo|atalho)=/g, "data-id=");
+  return { perigos: perigos(meu), atalhos: EMO.lista.map((e) => e.atalho).join(","), temImg: /emojis\/900000000000000001\.gif/.test(html) };
+});
+verdade("painel de emojis: nome ou id torto não entra", painelEmo.atalhos === "ks_brilho,gg", painelEmo.atalhos);
+verdade("painel de emojis: o grupo vindo do bot não vira tag", !painelEmo.perigos.length, JSON.stringify(painelEmo.perigos.slice(0, 3)));
+verdade("painel de emojis: o emoji animado aparece como GIF", painelEmo.temImg);
+
 /* O sorteio. Semente fixa: se um dia falhar, falha igual de novo e dá pra ver qual texto foi. */
 const sorteio = await pagina.evaluate(({ quantos, semente }) => {
   const PECAS = ["[", "]", "(", ")", "<", ">", "\"", "'", "`", "```", "*", "**", "_", "__", "~~", "\n", " ", " ", "=", "/", "//", "&", ";", ":",
@@ -245,6 +268,21 @@ igual("emoji do servidor", normal.emoji, '<img class="emo" alt=":ok:" title=":ok
 igual("texto pequeno e citação", normal.linhas, "<small>pequeno</small>\n<q>citado</q>");
 igual("marca do cofre escrita por alguém some", normal.marcaSolta, "a0b");
 igual("texto vazio", normal.vazio, "");
+
+/* tocar no emoji põe o atalho na caixa; a prévia mostra o emoji; o que já é
+   emoji fica como está */
+const usoEmo = await pagina.evaluate(() => {
+  EMO.lista = [{ atalho: "ks_brilho", nome: "ks_brilho_abc123", id: "900000000000000001", animado: true, grupo: "kingshot" }];
+  const t = document.getElementById("texto");
+  t.disabled = false; t.value = "bora !"; t.selectionStart = t.selectionEnd = 5;
+  porNaCaixa("ks_brilho");
+  return { caixa: t.value, previa: document.getElementById("previa-emo").innerHTML,
+    pronto: trocarAtalhos("<a:ks_brilho_abc123:900000000000000001> :nada: :ks_brilho:") };
+});
+igual("tocar no emoji põe o atalho onde estava o cursor", usoEmo.caixa, "bora :ks_brilho: !");
+verdade("a prévia mostra o emoji animado", /<img class="emo"[^>]+emojis\/900000000000000001\.gif/.test(usoEmo.previa), usoEmo.previa);
+igual("emoji pronto fica; atalho estranho fica como texto", usoEmo.pronto,
+  "<a:ks_brilho_abc123:900000000000000001> :nada: <a:ks_brilho_abc123:900000000000000001>");
 
 verdade("a página não estourou nenhuma vez", !estouros.length, estouros.slice(0, 2).join(" | "));
 

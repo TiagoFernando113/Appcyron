@@ -634,7 +634,8 @@ async function abrirCanal(c) {
   $("msgs").innerHTML = '<div class="vazio">Carregando…</div>';
   $("escrever").hidden = false;
   const pode = !E.canal || E.canal.escrever;
-  $("texto").disabled = !pode; $("bt-enviar").disabled = !pode;
+  $("texto").disabled = !pode; $("bt-enviar").disabled = !pode; $("bt-emo").disabled = !pode;
+  if (!pode) $("painel-emo").hidden = true;
   $("texto").placeholder = !pode ? "A CYRON não pode falar neste canal"
     : dm ? "Responder " + E.canal.nome + " como CYRON"
     : "Conversar em #" + (E.canal ? E.canal.nome : "") + " como CYRON";
@@ -721,7 +722,7 @@ async function enviar() {
   $("bt-enviar").disabled = true; $("nota").textContent = "Enviando…";
   try {
     const j = await api("/visao/enviar", { method: "POST", body: JSON.stringify({ c: E.c, texto }) });
-    caixa.value = ""; ajustarCaixa();
+    caixa.value = ""; ajustarCaixa(); mostrarPrevia();
     if (!E.msgs.some((m) => m.id === j.mensagem.id)) E.msgs.push(j.mensagem);
     desenharMensagens();
     $("nota").textContent = "";
@@ -731,13 +732,90 @@ async function enviar() {
 }
 function ajustarCaixa() { const t = $("texto"); t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight, 180) + "px"; }
 
+/* ---------------- os emojis da CYRON ----------------
+
+   O app fala COMO a CYRON, e os emojis do aplicativo (os da ficha de herói,
+   as carinhas dela, as figurinhas) só ela pode usar -- inclusive os
+   animados, sem Nitro. O botão 😊 abre todos; tocar põe o atalho :nome: na
+   caixa, e o bot troca pelo emoji na hora de enviar. A prévia mostra como
+   vai ficar. */
+const EMO = { lista: null, grupo: "kingshot" };
+const NOMES_DOS_GRUPOS = { kingshot: "Kingshot", cyron: "CYRON", figurinhas: "Figurinhas" };
+
+async function carregarEmojis() {
+  if (EMO.lista) return EMO.lista;
+  const j = await api("/visao/emojis");
+  /* Só o que tem cara de emoji: o nome e o id entram numa página. */
+  EMO.lista = (j.emojis || []).filter((e) => /^\d{15,25}$/.test(String(e.id)) && /^\w{2,32}$/.test(String(e.atalho)) &&
+    /^\w{2,32}$/.test(String(e.nome)));
+  return EMO.lista;
+}
+
+function urlDoEmoji(e) {
+  return "https://cdn.discordapp.com/emojis/" + e.id + "." + (e.animado ? "gif" : "png") + "?size=48";
+}
+
+function desenharEmojis() {
+  const grupos = [...new Set(EMO.lista.map((e) => e.grupo))];
+  if (!grupos.length) { $("abas-emo").innerHTML = ""; $("grade-emo").textContent = "A CYRON ainda não tem emojis."; return; }
+  if (!grupos.includes(EMO.grupo)) EMO.grupo = grupos[0];
+  $("abas-emo").innerHTML = grupos.map((g) => '<button data-grupo="' + esc(g) + '"' + (g === EMO.grupo ? ' class="sel"' : "") + ">" +
+    esc(NOMES_DOS_GRUPOS[g] || g) + "</button>").join("");
+  $("grade-emo").innerHTML = EMO.lista.filter((e) => e.grupo === EMO.grupo).map((e) =>
+    '<button data-atalho="' + esc(e.atalho) + '" title=":' + esc(e.atalho) + ':"><img alt=":' + esc(e.atalho) + ':" src="' +
+    esc(urlDoEmoji(e)) + '" loading="lazy"></button>').join("");
+}
+
+async function abrirEmojis() {
+  const p = $("painel-emo");
+  if (!p.hidden) { p.hidden = true; return; }
+  p.hidden = false;
+  if (!EMO.lista) $("grade-emo").textContent = "Carregando…";
+  try { await carregarEmojis(); desenharEmojis(); }
+  catch (e) { $("grade-emo").textContent = "Não consegui carregar os emojis: " + e.message; }
+}
+
+function porNaCaixa(atalho) {
+  const t = $("texto");
+  const junto = ":" + atalho + ": ";
+  const a = t.selectionStart == null ? t.value.length : t.selectionStart;
+  const b = t.selectionEnd == null ? a : t.selectionEnd;
+  t.value = (t.value.slice(0, a) + junto + t.value.slice(b)).slice(0, 2000);
+  t.selectionStart = t.selectionEnd = Math.min(a + junto.length, t.value.length);
+  ajustarCaixa(); mostrarPrevia();
+  /* No celular, focar abriria o teclado por cima do painel. */
+  if (matchMedia("(pointer: fine)").matches) t.focus();
+}
+
+/* O mesmo que o bot faz ao enviar: :atalho: vira o emoji; o que já é emoji
+   fica. */
+function trocarAtalhos(texto) {
+  const mapa = new Map();
+  for (const e of EMO.lista || []) { mapa.set(e.atalho, e); mapa.set(e.nome, e); }
+  return String(texto).replace(/<a?:\w+:\d+>|:(\w{2,32}):/g, (tudo, atalho) => {
+    const e = atalho && mapa.get(atalho);
+    return e ? "<" + (e.animado ? "a" : "") + ":" + e.nome + ":" + e.id + ">" : tudo;
+  });
+}
+
+function mostrarPrevia() {
+  const p = $("previa-emo"), texto = $("texto").value;
+  const trocado = EMO.lista ? trocarAtalhos(texto) : texto;
+  if (trocado === texto) { p.hidden = true; p.innerHTML = ""; return; }
+  p.hidden = false;
+  p.innerHTML = "<small>Prévia:</small>" + fmt(trocado);
+}
+
 /* ---------------- começo ---------------- */
 
 $("bt-entrar").onclick = entrar;
 $("bt-sair").onclick = sair;
 $("bt-recarregar").onclick = () => E.modo === "painel" ? abrirPainel(true) : (E.c && abrirCanal(E.c));
 $("bt-enviar").onclick = enviar;
-$("texto").addEventListener("input", ajustarCaixa);
+$("texto").addEventListener("input", () => { ajustarCaixa(); mostrarPrevia(); });
+$("bt-emo").onclick = abrirEmojis;
+$("abas-emo").addEventListener("click", (ev) => { const b = ev.target.closest("[data-grupo]"); if (b) { EMO.grupo = b.dataset.grupo; desenharEmojis(); } });
+$("grade-emo").addEventListener("click", (ev) => { const b = ev.target.closest("[data-atalho]"); if (b) porNaCaixa(b.dataset.atalho); });
 $("texto").addEventListener("keydown", (ev) => {
   if (ev.key === "Enter" && !ev.shiftKey && matchMedia("(pointer: fine)").matches) { ev.preventDefault(); enviar(); }
 });

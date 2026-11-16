@@ -196,6 +196,18 @@
   .caixa button { flex: 0 0 auto; background: var(--azul); border: 0; color: #fff; border-radius: 8px; padding: 7px 12px; cursor: pointer; font-weight: 600; }
   .caixa button:disabled { opacity: .45; cursor: default; }
   .nota { font-size: 12px; color: var(--fraco); margin-top: 6px; }
+  /* os emojis da CYRON: botão, painel e prévia */
+  .caixa .bt-emo { background: none; padding: 4px 6px; font-size: 20px; line-height: 1; font-weight: 400; }
+  .painel-emo { background: #2b2d31; border: 1px solid #1e1f22; border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .abas-emo { display: flex; gap: 4px; padding: 6px; border-bottom: 1px solid #1e1f22; }
+  .abas-emo button { background: none; border: 0; color: var(--fraco); padding: 5px 10px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
+  .abas-emo button.sel { background: #404249; color: var(--texto); }
+  .grade-emo { display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); gap: 2px; padding: 6px; max-height: 220px; overflow-y: auto; color: var(--fraco); font-size: 13px; }
+  .grade-emo button { background: none; border: 0; border-radius: 6px; padding: 4px; cursor: pointer; aspect-ratio: 1; }
+  .grade-emo button:hover, .grade-emo button:focus-visible { background: #404249; }
+  .grade-emo img { width: 32px; height: 32px; object-fit: contain; display: block; margin: auto; }
+  .previa-emo { font-size: 14px; margin-top: 6px; color: var(--texto); }
+  .previa-emo small { color: var(--fraco); margin-right: 6px; }
   .aovivo { font-size: 12px; font-weight: 600; color: var(--verde); white-space: nowrap; }
   .vazio { color: var(--fraco); text-align: center; padding: 40px 20px; }
   .erro { color: #fff; background: rgba(242,63,67,.18); border: 1px solid rgba(242,63,67,.5); border-radius: 8px; padding: 10px 12px; margin: 12px 16px; }
@@ -234,7 +246,9 @@
       <button class="icobt" id="bt-recarregar" title="Recarregar">⟳</button></div>
     <div class="rolo" id="rolo-m"><div class="msgs" id="msgs"><div class="vazio">Escolha um canal.</div></div></div>
     <div class="escrever" id="escrever" hidden>
-      <div class="caixa"><textarea id="texto" rows="1" maxlength="2000"></textarea><button id="bt-enviar">Enviar</button></div>
+      <div class="painel-emo" id="painel-emo" hidden><div class="abas-emo" id="abas-emo"></div><div class="grade-emo" id="grade-emo"></div></div>
+      <div class="caixa"><textarea id="texto" rows="1" maxlength="2000"></textarea><button id="bt-emo" class="bt-emo" title="Emojis da CYRON" aria-label="Emojis da CYRON">😊</button><button id="bt-enviar">Enviar</button></div>
+      <div class="previa-emo" id="previa-emo" hidden></div>
       <div class="nota" id="nota"></div>
     </div>
   </section>
@@ -250,6 +264,6 @@
 </div>
 
 <!-- Mudou o app.js? Suba este numero: e ele que faz o navegador buscar o novo. -->
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
