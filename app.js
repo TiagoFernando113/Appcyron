@@ -30,7 +30,7 @@ const guardar = (k, v) => { try { v == null ? localStorage.removeItem(k) : local
 const ler = (k) => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } };
 
 let token = ler("cyron-visao-token");
-const E = { servidores: [], g: "", canais: [], c: "", canal: null, msgs: [], timer: null, carregando: false, modo: "servidor" };
+const E = { servidores: [], g: "", canais: [], c: "", canal: null, msgs: [], timer: null, carregando: false, modo: "servidor", leituras: {} };
 const V = { ws: null, pronto: false, espera: 2000, desistiu: false };
 
 /* ---------------- entrar e sair ---------------- */
@@ -192,9 +192,38 @@ function htmlMensagem(m, anterior) {
       '<span class="hora">' + hora(m.quando) + "</span></div>" : "") +
     (m.texto ? '<div class="txt' + (soEmoji(m.texto) ? " so-emoji" : "") + '">' + fmt(m.texto, m.nomes) + (m.editada ? ' <small class="hora">(editada)</small>' : "") + "</div>" : "") +
     (m.anexos || []).map(htmlAnexo).join("") +
+    htmlLerCalendario(m) +
     (m.figurinhas || []).filter((f) => urlSegura(f.url) && !/\.json(\?|$)/.test(f.url)).map((f) => '<img class="fig" loading="lazy" src="' + urlSegura(f.url) + '" alt="' + esc(f.nome) + '" title="' + esc(f.nome) + '">').join("") +
     (m.cartoes || []).map(htmlCartao).join("") +
     "</div></div>";
+}
+
+/* "Ler calendário": a mensagem com print do calendário do jogo ganha o botão;
+   a CYRON lê os prints (o motor no bot) e a leitura aparece embaixo, como um
+   cartão. Fica guardada em E.leituras: o canal é redesenhado a cada poucos
+   segundos, e a leitura não pode sumir no meio. O dono não é ADM no TOP, e o
+   comando de Apps do Discord só aparece para ADM -- por isso o app. */
+function htmlLerCalendario(m) {
+  /* Só com id de verdade do Discord (só números): o id vai para um atributo,
+     e o botão é a única tag de botão que esta tela desenha numa mensagem. */
+  if (!/^\d{15,25}$/.test(String(m.id || "")) || !(m.anexos || []).some((a) => /^image\//.test(a.tipo))) return "";
+  const leitura = (E.leituras || {})[m.id];
+  const rotulo = leitura === "lendo" ? "📅 Lendo os prints…" : leitura ? "📅 Ler de novo" : "📅 Ler calendário";
+  return '<button class="ler-cal" data-ler="' + esc(m.id) + '"' + (leitura === "lendo" ? " disabled" : "") + ">" + rotulo + "</button>" +
+    (leitura && leitura !== "lendo" ? (leitura.erro ? '<div class="erro">' + esc(leitura.erro) + "</div>"
+      : htmlCartao({ titulo: leitura.titulo, texto: leitura.corpo, rodape: leitura.rodape, cor: "#c8962e" })) : "");
+}
+
+async function lerCalendario(id) {
+  if (E.leituras[id] === "lendo") return;
+  E.leituras[id] = "lendo";
+  desenharMensagens("parado");
+  try {
+    E.leituras[id] = await api("/visao/calendario", { method: "POST", body: JSON.stringify({ c: E.c, m: id }) });
+  } catch (e) {
+    E.leituras[id] = { erro: e.message === "login" || e.message === "dono" ? "Entre de novo para ler." : e.message };
+  }
+  desenharMensagens("parado");
 }
 
 /* ---------------- telas ---------------- */
@@ -821,6 +850,7 @@ $("texto").addEventListener("keydown", (ev) => {
 });
 $("lista-s").addEventListener("click", (ev) => { const el = ev.target.closest("[data-g]"); if (el) abrirServidor(el.dataset.g); });
 $("lista-c").addEventListener("click", (ev) => { const el = ev.target.closest("[data-c]"); if (el) abrirCanal(el.dataset.c); });
+$("msgs").addEventListener("click", (ev) => { const b = ev.target.closest("[data-ler]"); if (b) lerCalendario(b.dataset.ler); });
 document.querySelectorAll(".voltar").forEach((b) => b.addEventListener("click", () => {
   pararPoll(); E.c = ""; avisarCanalAoVivo();
   mostrarColuna(b.dataset.ir === "s" ? "s" : "c");
