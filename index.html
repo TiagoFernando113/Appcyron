@@ -187,6 +187,8 @@
   .anexo { display: block; margin-top: 6px; max-width: min(100%, 400px); max-height: 320px; border-radius: 6px; }
   .arq { display: inline-block; margin-top: 6px; padding: 8px 12px; background: var(--painel); border: 1px solid var(--linha); border-radius: 6px; }
   .fig { width: 120px; height: 120px; object-fit: contain; margin-top: 4px; }
+  .ler-cal { display: inline-block; margin-top: 6px; background: var(--painel); border: 1px solid var(--linha); border-radius: 6px; padding: 6px 12px; color: inherit; cursor: pointer; font: inherit; }
+  .ler-cal[disabled] { opacity: .6; cursor: wait; }
   .mais { display: block; margin: 10px auto; background: var(--painel); border: 1px solid var(--linha); border-radius: 6px; padding: 6px 14px; color: var(--fraco); cursor: pointer; }
 
   .escrever { flex: 0 0 auto; padding: 0 16px 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
@@ -264,6 +266,6 @@
 </div>
 
 <!-- Mudou o app.js? Suba este numero: e ele que faz o navegador buscar o novo. -->
-<script src="app.js?v=3"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

@@ -63,7 +63,12 @@ const examinar = () => {
     molde.innerHTML = html;
     const ruins = [];
     const PROIBIDAS = /^(SCRIPT|IFRAME|OBJECT|EMBED|FORM|BASE|META|LINK|STYLE|SVG|MATH|INPUT|BUTTON|TEXTAREA|FRAME|FRAMESET)$/i;
+    /* A única exceção: o botão "Ler calendário" que a própria tela desenha,
+       exatamente assim -- classe ler-cal, data-ler só com número de id. */
+    const nossoBotao = (el) => el.tagName === "BUTTON" && el.className === "ler-cal" &&
+      /^\d{15,25}$/.test(el.getAttribute("data-ler") || "") && [...el.attributes].every((a) => ["class", "data-ler", "disabled"].includes(a.name));
     for (const el of molde.content.querySelectorAll("*")) {
+      if (nossoBotao(el)) continue;
       if (PROIBIDAS.test(el.tagName)) ruins.push("tag " + el.tagName);
       for (const a of el.attributes) {
         const nome = a.name.toLowerCase(), valor = a.value;
@@ -283,6 +288,26 @@ igual("tocar no emoji põe o atalho onde estava o cursor", usoEmo.caixa, "bora :
 verdade("a prévia mostra o emoji animado", /<img class="emo"[^>]+emojis\/900000000000000001\.gif/.test(usoEmo.previa), usoEmo.previa);
 igual("emoji pronto fica; atalho estranho fica como texto", usoEmo.pronto,
   "<a:ks_brilho_abc123:900000000000000001> :nada: <a:ks_brilho_abc123:900000000000000001>");
+
+/* "Ler calendário": só em mensagem com imagem, com o id escapado, e a leitura
+   (que vem do bot, mas tem texto lido de um print) passa pelo mesmo cartão seguro */
+const cal = await pagina.evaluate(() => {
+  const comPrint = mensagemDe("", { id: "444444444444444444", anexos: [{ url: "https://cdn.discordapp.com/a.jpg", nome: "a.jpg", tipo: "image/jpeg" }] });
+  const semPrint = mensagemDe("oi", { id: "555555555555555555" });
+  const antes = htmlMensagem(comPrint, null);
+  E.leituras["444444444444444444"] = { titulo: "🧪 Leitura", corpo: "🔴 **Agora**\n<img src=x onerror=alert(1)>", rodape: "modelo" };
+  const depois = htmlMensagem(comPrint, null);
+  E.leituras["444444444444444444"] = { erro: "<b>falhou</b>" };
+  const erro = htmlMensagem(comPrint, null);
+  E.leituras = {};
+  return { antes, semPrint: htmlMensagem(semPrint, null), depois, erro, limpo: !perigos(depois).length && !perigos(erro).length };
+});
+verdade("mensagem com print ganha o botão Ler calendário", /data-ler="444444444444444444"/.test(cal.antes), cal.antes);
+verdade("mensagem sem print não ganha", !/data-ler/.test(cal.semPrint), cal.semPrint);
+verdade("id que não é id do Discord: sem botão", await pagina.evaluate(() =>
+  !/data-ler/.test(htmlMensagem(mensagemDe("", { id: '1" onclick="x', anexos: [{ url: "https://cdn.discordapp.com/a.jpg", nome: "a", tipo: "image/png" }] }), null))));
+verdade("a leitura aparece no cartão, com o negrito", /<b>Agora<\/b>/.test(cal.depois), cal.depois);
+verdade("e o que veio do print não vira código", cal.limpo, cal.depois);
 
 verdade("a página não estourou nenhuma vez", !estouros.length, estouros.slice(0, 2).join(" | "));
 
